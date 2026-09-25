@@ -8,7 +8,7 @@
     <application
         android:allowBackup="false"
         android:label="Wi-Fi Toggle Test"
-        android:theme="@android:style/Theme.AppCompat.Light.NoActionBar">
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
         <activity
             android:name=".MainActivity"
