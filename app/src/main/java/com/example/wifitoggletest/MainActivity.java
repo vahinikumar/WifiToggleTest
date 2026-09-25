@@ -1,26 +1,72 @@
-<?xml version="1.0" encoding="utf-8"?>
+package com.example.wifitoggletest;
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+import android.app.Activity;
+import android.net.wifi.WifiManager;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.LinearLayout;
 
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+public class MainActivity extends Activity {
 
-    <application
-        android:allowBackup="false"
-        android:label="Wi-Fi Toggle Test"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+    private WifiManager wifiManager;
+    private TextView result;
 
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+        wifiManager =
+                (WifiManager) getApplicationContext()
+                        .getSystemService(WIFI_SERVICE);
 
-        </activity>
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(40, 40, 40, 40);
 
-    </application>
+        result = new TextView(this);
+        result.setTextSize(20);
 
-</manifest>
+        Button button = new Button(this);
+        button.setText("TRY TO TOGGLE WI-FI");
+
+        updateStatus();
+
+        button.setOnClickListener(v -> {
+
+            boolean currentState =
+                    wifiManager.isWifiEnabled();
+
+            boolean requestedState =
+                    !currentState;
+
+            boolean success =
+                    wifiManager.setWifiEnabled(requestedState);
+
+            result.setText(
+                    "Wi-Fi before: " +
+                    currentState +
+                    "\n\nRequested: " +
+                    requestedState +
+                    "\n\nsetWifiEnabled() returned: " +
+                    success
+            );
+        });
+
+        layout.addView(result);
+        layout.addView(button);
+
+        setContentView(layout);
+    }
+
+    private void updateStatus() {
+
+        boolean currentState =
+                wifiManager.isWifiEnabled();
+
+        result.setText(
+                "Current Wi-Fi: " +
+                (currentState ? "ON" : "OFF")
+        );
+    }
+}
