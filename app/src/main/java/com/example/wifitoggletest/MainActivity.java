@@ -1,24 +1,20 @@
 package com.example.wifitoggletest;
 
 import android.app.Activity;
-import android.net.wifi.WifiManager;
+import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.LinearLayout;
 
 public class MainActivity extends Activity {
 
-    private WifiManager wifiManager;
     private TextView result;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        wifiManager =
-                (WifiManager) getApplicationContext()
-                        .getSystemService(WIFI_SERVICE);
 
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
@@ -26,47 +22,40 @@ public class MainActivity extends Activity {
 
         result = new TextView(this);
         result.setTextSize(20);
+        result.setText("Wi-Fi test");
 
         Button button = new Button(this);
-        button.setText("TRY TO TOGGLE WI-FI");
-
-        updateStatus();
+        button.setText("OPEN WI-FI CONTROL");
 
         button.setOnClickListener(v -> {
 
-            boolean currentState =
-                    wifiManager.isWifiEnabled();
+            try {
+                Intent intent =
+                        new Intent(Settings.Panel.ACTION_WIFI);
 
-            boolean requestedState =
-                    !currentState;
+                startActivity(intent);
 
-            boolean success =
-                    wifiManager.setWifiEnabled(requestedState);
+                result.setText(
+                        "Wi-Fi control opened.\n\n" +
+                        "Check if you can turn Wi-Fi ON/OFF there."
+                );
 
-            result.setText(
-                    "Wi-Fi before: " +
-                    currentState +
-                    "\n\nRequested: " +
-                    requestedState +
-                    "\n\nsetWifiEnabled() returned: " +
-                    success
-            );
+            } catch (Exception e) {
+
+                Intent intent =
+                        new Intent(Settings.ACTION_WIFI_SETTINGS);
+
+                startActivity(intent);
+
+                result.setText(
+                        "Opened Wi-Fi settings."
+                );
+            }
         });
 
         layout.addView(result);
         layout.addView(button);
 
         setContentView(layout);
-    }
-
-    private void updateStatus() {
-
-        boolean currentState =
-                wifiManager.isWifiEnabled();
-
-        result.setText(
-                "Current Wi-Fi: " +
-                (currentState ? "ON" : "OFF")
-        );
     }
 }
