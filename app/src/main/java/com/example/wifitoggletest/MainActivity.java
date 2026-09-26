@@ -3,6 +3,7 @@ package com.example.wifitoggletest;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
@@ -16,9 +17,11 @@ public class MainActivity extends Activity {
         result = new TextView(this);
         result.setTextSize(18);
         result.setPadding(30, 30, 30, 30);
-        result.setText("Opening Control Center...");
 
-        setContentView(result);
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.addView(result);
+
+        setContentView(scrollView);
 
         boolean opened =
                 WifiAccessibilityService.openNotificationPanel();
@@ -27,7 +30,7 @@ public class MainActivity extends Activity {
 
             result.setText(
                     "Control Center opened.\n\n" +
-                    "Wait 2 seconds, then check the screen."
+                    "Wait 3 seconds..."
             );
 
             new Handler().postDelayed(() -> {
@@ -37,7 +40,7 @@ public class MainActivity extends Activity {
 
                 result.setText(nodes);
 
-            }, 2000);
+            }, 3000);
 
         } else {
 
