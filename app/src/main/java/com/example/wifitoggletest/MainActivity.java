@@ -3,7 +3,6 @@ package com.example.wifitoggletest;
 import android.app.Activity;
 import android.media.AudioManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -27,55 +26,80 @@ public class MainActivity extends Activity {
         AudioManager audioManager =
                 (AudioManager) getSystemService(AUDIO_SERVICE);
 
-        showState(
-                audioManager,
-                "BEFORE OPENING CONTROL CENTER"
+        result.setText(
+                "BEFORE\n" +
+                "Ringer Mode: " +
+                getModeName(audioManager.getRingerMode()) +
+                "\nVibration: " +
+                getVibrationState(audioManager) +
+                "\n\nTrying to turn vibration ON..."
         );
 
-        WifiAccessibilityService.openNotificationPanel();
+        try {
 
-        new Handler().postDelayed(() -> {
-
-            showState(
-                    audioManager,
-                    "AFTER 3 SECONDS"
+            audioManager.setVibrateSetting(
+                    AudioManager.VIBRATE_TYPE_RINGER,
+                    AudioManager.VIBRATE_SETTING_ON
             );
 
-        }, 3000);
-    }
+        } catch (Exception e) {
 
-    private void showState(
-            AudioManager audioManager,
-            String title) {
+            result.append(
+                    "\n\nERROR:\n" +
+                    e.getClass().getSimpleName() +
+                    "\n" +
+                    e.getMessage()
+            );
 
-        int mode =
-                audioManager.getRingerMode();
-
-        String modeName;
-
-        if (mode == AudioManager.RINGER_MODE_NORMAL) {
-            modeName = "NORMAL";
-        } else if (mode == AudioManager.RINGER_MODE_VIBRATE) {
-            modeName = "VIBRATE";
-        } else if (mode == AudioManager.RINGER_MODE_SILENT) {
-            modeName = "SILENT";
-        } else {
-            modeName = "UNKNOWN";
+            return;
         }
 
-        boolean vibration =
+        result.append(
+                "\n\nAFTER\n" +
+                "Ringer Mode: " +
+                getModeName(audioManager.getRingerMode()) +
+                "\nVibration: " +
+                getVibrationState(audioManager)
+        );
+    }
+
+    private String getModeName(int mode) {
+
+        if (mode == AudioManager.RINGER_MODE_NORMAL) {
+            return "NORMAL";
+        }
+
+        if (mode == AudioManager.RINGER_MODE_VIBRATE) {
+            return "VIBRATE";
+        }
+
+        if (mode == AudioManager.RINGER_MODE_SILENT) {
+            return "SILENT";
+        }
+
+        return "UNKNOWN";
+    }
+
+    private String getVibrationState(
+            AudioManager audioManager) {
+
+        int setting =
                 audioManager.getVibrateSetting(
                         AudioManager.VIBRATE_TYPE_RINGER
-                ) == AudioManager.VIBRATE_SETTING_ON;
+                );
 
-        result.append(
-                "\n\n" +
-                "===== " + title + " =====\n" +
-                "Ringer Mode: " + modeName + "\n" +
-                "Ringer Mode Number: " + mode + "\n" +
-                "Vibration Setting: " +
-                (vibration ? "ON" : "OFF") +
-                "\n"
-        );
+        if (setting == AudioManager.VIBRATE_SETTING_ON) {
+            return "ON";
+        }
+
+        if (setting == AudioManager.VIBRATE_SETTING_OFF) {
+            return "OFF";
+        }
+
+        if (setting == AudioManager.VIBRATE_SETTING_ONLY_SILENT) {
+            return "ONLY_SILENT";
+        }
+
+        return "UNKNOWN";
     }
 }
