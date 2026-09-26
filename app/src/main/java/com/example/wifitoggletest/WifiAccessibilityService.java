@@ -26,19 +26,18 @@ public class WifiAccessibilityService extends AccessibilityService {
         Intent intent =
                 new Intent(Settings.ACTION_SOUND_SETTINGS);
 
-        intent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         instance.startActivity(intent);
 
         instance.handler.postDelayed(
-                () -> instance.setRingVolumeToMaximum(),
+                () -> instance.readRingVolume(),
                 1500);
 
         return true;
     }
 
-    private void setRingVolumeToMaximum() {
+    private void readRingVolume() {
 
         for (android.view.accessibility.AccessibilityWindowInfo window
                 : getWindows()) {
@@ -80,15 +79,26 @@ public class WifiAccessibilityService extends AccessibilityService {
 
         if (isRingVolume) {
 
-            Bundle arguments = new Bundle();
+            AccessibilityNodeInfo.RangeInfo range =
+                    node.getRangeInfo();
 
-            arguments.putFloat(
-                    "ACTION_ARGUMENT_PROGRESS_VALUE",
-                    100f);
+            if (range != null) {
 
-            return node.performAction(
-                    16908349,
-                    arguments);
+                float min = range.getMin();
+                float max = range.getMax();
+                float current = range.getCurrent();
+
+                android.util.Log.d(
+                        "RINGER_DIAGNOSTIC",
+                        "Ring volume -> MIN: "
+                                + min
+                                + " MAX: "
+                                + max
+                                + " CURRENT: "
+                                + current);
+            }
+
+            return true;
         }
 
         for (int i = 0;
