@@ -1,9 +1,10 @@
 package com.example.wifitoggletest;
 
 import android.accessibilityservice.AccessibilityService;
+import android.content.Intent;
 import android.os.Handler;
+import android.provider.Settings;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.widget.Toast;
 
 public class WifiAccessibilityService extends AccessibilityService {
 
@@ -22,18 +23,17 @@ public class WifiAccessibilityService extends AccessibilityService {
         if (instance == null) return false;
 
         try {
-            android.content.Intent intent =
-                    new android.content.Intent(
-                            android.provider.Settings.ACTION_SOUND_SETTINGS);
+            Intent intent =
+                    new Intent(Settings.ACTION_SOUND_SETTINGS);
 
-            intent.addFlags(
-                    android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
             instance.startActivity(intent);
 
             instance.handler.postDelayed(
                     () -> instance.inspectScreen(),
-                    1500);
+                    1500
+            );
 
             return true;
 
@@ -59,13 +59,11 @@ public class WifiAccessibilityService extends AccessibilityService {
             }
         }
 
-        Toast.makeText(
-                this,
-                result.length() == 0
-                        ? "No accessibility nodes found"
-                        : result.toString(),
-                Toast.LENGTH_LONG
-        ).show();
+        final String output = result.length() == 0
+                ? "No accessibility nodes found."
+                : result.toString();
+
+        handler.post(() -> showResult(output));
     }
 
     private void inspectNode(
@@ -88,12 +86,9 @@ public class WifiAccessibilityService extends AccessibilityService {
             result.append(
                     "TEXT: " + t +
                     "\nDESC: " + d +
-                    "\nCLASS: " +
-                    node.getClassName() +
-                    "\nCLICK: " +
-                    node.isClickable() +
-                    "\nFOCUS: " +
-                    node.isFocusable() +
+                    "\nCLASS: " + node.getClassName() +
+                    "\nCLICKABLE: " + node.isClickable() +
+                    "\nFOCUSABLE: " + node.isFocusable() +
                     "\n\n"
             );
         }
@@ -112,6 +107,20 @@ public class WifiAccessibilityService extends AccessibilityService {
                 child.recycle();
             }
         }
+    }
+
+    private void showResult(String output) {
+
+        Intent intent =
+                new Intent(this, DiagnosticActivity.class);
+
+        intent.putExtra("diagnostic", output);
+
+        intent.addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK
+        );
+
+        startActivity(intent);
     }
 
     @Override
