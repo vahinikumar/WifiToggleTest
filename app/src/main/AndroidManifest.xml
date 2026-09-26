@@ -7,7 +7,7 @@
 
     <application
         android:allowBackup="false"
-        android:label="Wi-Fi Toggle Test"
+        android:label="Ringer Toggle"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
         <activity
