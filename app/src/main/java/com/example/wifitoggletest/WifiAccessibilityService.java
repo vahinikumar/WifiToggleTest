@@ -1,10 +1,14 @@
 package com.example.wifitoggletest;
 
 import android.accessibilityservice.AccessibilityService;
+import android.os.Handler;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.Toast;
 
 public class WifiAccessibilityService extends AccessibilityService {
+
+    private final Handler handler = new Handler();
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
@@ -16,33 +20,37 @@ public class WifiAccessibilityService extends AccessibilityService {
 
         if (root == null) return;
 
-        findAndClickWifiSwitch(root);
+        // Show the controls found on the screen
+        showNodes(root);
     }
 
-    private boolean findAndClickWifiSwitch(
-            AccessibilityNodeInfo node) {
+    private void showNodes(AccessibilityNodeInfo node) {
 
-        if (node == null) return false;
+        if (node == null) return;
 
         CharSequence text = node.getText();
         CharSequence description =
                 node.getContentDescription();
 
-        String textValue =
-                text != null ? text.toString() : "";
+        if (text != null && text.length() > 0) {
 
-        String descriptionValue =
-                description != null
-                        ? description.toString()
-                        : "";
+            Toast.makeText(
+                    this,
+                    "TEXT: " + text,
+                    Toast.LENGTH_SHORT
+            ).show();
 
-        if (textValue.equalsIgnoreCase("Wi-Fi") ||
-                descriptionValue.equalsIgnoreCase("Wi-Fi")) {
+        }
 
-            if (node.isClickable()) {
-                return node.performAction(
-                        AccessibilityNodeInfo.ACTION_CLICK);
-            }
+        if (description != null &&
+                description.length() > 0) {
+
+            Toast.makeText(
+                    this,
+                    "DESC: " + description,
+                    Toast.LENGTH_SHORT
+            ).show();
+
         }
 
         for (int i = 0; i < node.getChildCount(); i++) {
@@ -52,16 +60,10 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             if (child != null) {
 
-                if (findAndClickWifiSwitch(child)) {
-                    child.recycle();
-                    return true;
-                }
-
+                showNodes(child);
                 child.recycle();
             }
         }
-
-        return false;
     }
 
     @Override
