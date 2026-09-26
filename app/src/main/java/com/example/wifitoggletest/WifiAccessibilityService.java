@@ -18,8 +18,7 @@ public class WifiAccessibilityService extends AccessibilityService {
         instance = this;
     }
 
-    public static boolean openNotificationPanel(
-            String mode) {
+    public static boolean openNotificationPanel() {
 
         if (instance == null) {
             return false;
@@ -32,40 +31,17 @@ public class WifiAccessibilityService extends AccessibilityService {
 
         if (opened) {
 
-            if (mode.equals("quiet")) {
+            instance.handler.postDelayed(() -> {
 
-                instance.handler.postDelayed(() -> {
+                instance.clickSilentMode();
 
-                    instance.clickMode(
-                            "Vibration mode"
-                    );
-
-                    instance.handler.postDelayed(() -> {
-
-                        instance.clickMode(
-                                "Silent mode"
-                        );
-
-                    }, 1000);
-
-                }, 1000);
-
-            } else {
-
-                instance.handler.postDelayed(() -> {
-
-                    instance.clickMode(
-                            "Silent mode"
-                    );
-
-                }, 1000);
-            }
+            }, 1000);
         }
 
         return opened;
     }
 
-    private void clickMode(String mode) {
+    private void clickSilentMode() {
 
         for (
                 android.view.accessibility.AccessibilityWindowInfo window
@@ -77,10 +53,7 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             if (root != null) {
 
-                if (findAndClickMode(
-                        root,
-                        mode
-                )) {
+                if (findAndClickSilentMode(root)) {
 
                     root.recycle();
 
@@ -92,9 +65,8 @@ public class WifiAccessibilityService extends AccessibilityService {
         }
     }
 
-    private boolean findAndClickMode(
-            AccessibilityNodeInfo node,
-            String mode) {
+    private boolean findAndClickSilentMode(
+            AccessibilityNodeInfo node) {
 
         if (node == null) {
             return false;
@@ -106,7 +78,7 @@ public class WifiAccessibilityService extends AccessibilityService {
         if (text != null &&
                 text.toString()
                         .trim()
-                        .equalsIgnoreCase(mode)) {
+                        .equalsIgnoreCase("Silent mode")) {
 
             AccessibilityNodeInfo parent =
                     node.getParent();
@@ -138,10 +110,7 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             if (child != null) {
 
-                if (findAndClickMode(
-                        child,
-                        mode
-                )) {
+                if (findAndClickSilentMode(child)) {
 
                     child.recycle();
 
