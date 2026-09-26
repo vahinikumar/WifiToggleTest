@@ -27,14 +27,8 @@ public class MainActivity extends Activity {
 
         if (isQuiet) {
 
-            audioManager.setRingerMode(
-                    AudioManager.RINGER_MODE_NORMAL
-            );
+            WifiAccessibilityService.restoreNormalMode();
 
-            audioManager.setVibrateSetting(
-                    AudioManager.VIBRATE_TYPE_RINGER,
-                    AudioManager.VIBRATE_SETTING_OFF
-            );
         }
 
         finish();
