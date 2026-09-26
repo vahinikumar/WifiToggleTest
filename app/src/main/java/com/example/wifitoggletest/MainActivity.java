@@ -13,24 +13,12 @@ public class MainActivity extends Activity {
         AudioManager audioManager =
                 (AudioManager) getSystemService(AUDIO_SERVICE);
 
-        int currentVolume =
-                audioManager.getStreamVolume(
-                        AudioManager.STREAM_RING
-                );
-
-        int maxVolume =
+        audioManager.setStreamVolume(
+                AudioManager.STREAM_RING,
                 audioManager.getStreamMaxVolume(
-                        AudioManager.STREAM_RING
-                );
-
-        if (currentVolume < maxVolume) {
-
-            audioManager.setStreamVolume(
-                    AudioManager.STREAM_RING,
-                    maxVolume,
-                    0
-            );
-        }
+                        AudioManager.STREAM_RING),
+                AudioManager.FLAG_SHOW_UI
+        );
 
         finish();
     }
