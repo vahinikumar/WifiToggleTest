@@ -1,9 +1,7 @@
 package com.example.wifitoggletest;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -23,28 +21,27 @@ public class MainActivity extends Activity {
 
         result = new TextView(this);
         result.setTextSize(18);
-        result.setText("Quick Settings test");
+        result.setText("Accessibility Control Center test");
 
         Button button = new Button(this);
         button.setText("OPEN CONTROL CENTER");
 
         button.setOnClickListener(v -> {
 
-            try {
-                Intent intent = new Intent(
-                        "android.settings.QUICK_SETTINGS"
-                );
+            boolean opened =
+                    WifiAccessibilityService
+                            .openNotificationPanel();
 
-                startActivity(intent);
-
-                result.setText(
-                        "Quick Settings intent launched."
-                );
-
-            } catch (Exception e) {
+            if (opened) {
 
                 result.setText(
-                        "Quick Settings intent is not supported."
+                        "System panel opened."
+                );
+
+            } else {
+
+                result.setText(
+                        "Accessibility Service is not connected."
                 );
             }
         });
