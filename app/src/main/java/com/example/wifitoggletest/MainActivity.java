@@ -13,23 +13,29 @@ public class MainActivity extends Activity {
         AudioManager audioManager =
                 (AudioManager) getSystemService(AUDIO_SERVICE);
 
-        int mode = audioManager.getRingerMode();
+        int ringerMode =
+                audioManager.getRingerMode();
 
-        // If already in Normal mode, do nothing.
-        if (mode == AudioManager.RINGER_MODE_NORMAL) {
-            finish();
-            return;
+        int vibrationSetting =
+                audioManager.getVibrateSetting(
+                        AudioManager.VIBRATE_TYPE_RINGER
+                );
+
+        boolean isQuiet =
+                ringerMode == AudioManager.RINGER_MODE_SILENT
+                && vibrationSetting == AudioManager.VIBRATE_SETTING_ON;
+
+        if (isQuiet) {
+
+            audioManager.setRingerMode(
+                    AudioManager.RINGER_MODE_NORMAL
+            );
+
+            audioManager.setVibrateSetting(
+                    AudioManager.VIBRATE_TYPE_RINGER,
+                    AudioManager.VIBRATE_SETTING_OFF
+            );
         }
-
-        // Otherwise restore normal ringing.
-        audioManager.setRingerMode(
-                AudioManager.RINGER_MODE_NORMAL
-        );
-
-        audioManager.setVibrateSetting(
-                AudioManager.VIBRATE_TYPE_RINGER,
-                AudioManager.VIBRATE_SETTING_OFF
-        );
 
         finish();
     }
