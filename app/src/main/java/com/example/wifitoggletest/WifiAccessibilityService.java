@@ -3,7 +3,6 @@ package com.example.wifitoggletest;
 import android.accessibilityservice.AccessibilityService;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.Settings;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -11,7 +10,8 @@ public class WifiAccessibilityService extends AccessibilityService {
 
     private static WifiAccessibilityService instance;
 
-    private final Handler handler = new Handler();
+    private final android.os.Handler handler =
+            new android.os.Handler();
 
     @Override
     protected void onServiceConnected() {
@@ -23,25 +23,19 @@ public class WifiAccessibilityService extends AccessibilityService {
 
         if (instance == null) return false;
 
-        try {
+        Intent intent =
+                new Intent(Settings.ACTION_SOUND_SETTINGS);
 
-            Intent intent =
-                    new Intent(Settings.ACTION_SOUND_SETTINGS);
+        intent.addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK);
 
-            intent.addFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK);
+        instance.startActivity(intent);
 
-            instance.startActivity(intent);
+        instance.handler.postDelayed(
+                () -> instance.setRingVolumeToMaximum(),
+                1500);
 
-            instance.handler.postDelayed(
-                    () -> instance.setRingVolumeToMaximum(),
-                    1500);
-
-            return true;
-
-        } catch (Exception e) {
-            return false;
-        }
+        return true;
     }
 
     private void setRingVolumeToMaximum() {
@@ -88,13 +82,12 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             Bundle arguments = new Bundle();
 
-            arguments.putInt(
-                    AccessibilityNodeInfo
-                            .ACTION_ARGUMENT_PROGRESS_VALUE_INT,
-                    100);
+            arguments.putFloat(
+                    "ACTION_ARGUMENT_PROGRESS_VALUE",
+                    100f);
 
             return node.performAction(
-                    AccessibilityNodeInfo.ACTION_SET_PROGRESS,
+                    16908349,
                     arguments);
         }
 
