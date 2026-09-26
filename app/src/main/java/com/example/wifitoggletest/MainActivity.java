@@ -1,61 +1,78 @@
 package com.example.wifitoggletest;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.os.Bundle;
-import android.provider.Settings;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.LinearLayout;
+import android.accessibilityservice.AccessibilityService;
+import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
 
-public class MainActivity extends Activity {
+public class WifiAccessibilityService extends AccessibilityService {
 
-    private TextView result;
+    private static StringBuilder allControls =
+            new StringBuilder();
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onAccessibilityEvent(AccessibilityEvent event) {
 
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(40, 40, 40, 40);
+        if (event == null) return;
 
-        result = new TextView(this);
-        result.setTextSize(20);
-        result.setText("Wi-Fi test");
+        AccessibilityNodeInfo root =
+                getRootInActiveWindow();
 
-        Button button = new Button(this);
-        button.setText("OPEN WI-FI CONTROL");
+        if (root == null) return;
 
-        button.setOnClickListener(v -> {
+        allControls.setLength(0);
 
-            try {
-                Intent intent =
-                        new Intent(Settings.Panel.ACTION_WIFI);
+        collectNodes(root);
+    }
 
-                startActivity(intent);
+    private void collectNodes(AccessibilityNodeInfo node) {
 
-                result.setText(
-                        "Wi-Fi control opened.\n\n" +
-                        "Check if you can turn Wi-Fi ON/OFF there."
-                );
+        if (node == null) return;
 
-            } catch (Exception e) {
+        CharSequence text = node.getText();
+        CharSequence description =
+                node.getContentDescription();
 
-                Intent intent =
-                        new Intent(Settings.ACTION_WIFI_SETTINGS);
+        if ((text != null && text.length() > 0) ||
+                (description != null &&
+                        description.length() > 0)) {
 
-                startActivity(intent);
+            allControls.append("\n");
 
-                result.setText(
-                        "Opened Wi-Fi settings."
-                );
+            if (text != null && text.length() > 0) {
+                allControls.append("TEXT: ");
+                allControls.append(text);
+                allControls.append("\n");
             }
-        });
 
-        layout.addView(result);
-        layout.addView(button);
+            if (description != null &&
+                    description.length() > 0) {
 
-        setContentView(layout);
+                allControls.append("DESC: ");
+                allControls.append(description);
+                allControls.append("\n");
+            }
+
+            allControls.append("----------------\n");
+        }
+
+        for (int i = 0; i < node.getChildCount(); i++) {
+
+            AccessibilityNodeInfo child =
+                    node.getChild(i);
+
+            if (child != null) {
+
+                collectNodes(child);
+                child.recycle();
+            }
+        }
+    }
+
+    public static String getAllControls() {
+        return allControls.toString();
+    }
+
+    @Override
+    public void onInterrupt() {
     }
 }
