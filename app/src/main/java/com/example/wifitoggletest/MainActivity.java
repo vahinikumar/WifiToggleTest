@@ -5,8 +5,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.view.ViewGroup;
 
 public class MainActivity extends Activity {
@@ -22,47 +22,30 @@ public class MainActivity extends Activity {
         layout.setPadding(30, 30, 30, 30);
 
         result = new TextView(this);
-        result.setTextSize(16);
-        result.setText("Wi-Fi diagnostic");
+        result.setTextSize(18);
+        result.setText("Quick Settings test");
 
-        Button openButton = new Button(this);
-        openButton.setText("OPEN WI-FI CONTROL");
+        Button button = new Button(this);
+        button.setText("OPEN CONTROL CENTER");
 
-        Button showButton = new Button(this);
-        showButton.setText("SHOW ALL CONTROLS");
-
-        openButton.setOnClickListener(v -> {
+        button.setOnClickListener(v -> {
 
             try {
-                Intent intent =
-                        new Intent(Settings.Panel.ACTION_WIFI);
+                Intent intent = new Intent(
+                        "android.settings.QUICK_SETTINGS"
+                );
 
                 startActivity(intent);
+
+                result.setText(
+                        "Quick Settings intent launched."
+                );
 
             } catch (Exception e) {
 
-                Intent intent =
-                        new Intent(Settings.ACTION_WIFI_SETTINGS);
-
-                startActivity(intent);
-            }
-        });
-
-        showButton.setOnClickListener(v -> {
-
-            String controls =
-                    WifiAccessibilityService.getAllControls();
-
-            if (controls.isEmpty()) {
-
                 result.setText(
-                        "No controls detected yet.\n\n" +
-                        "First tap OPEN WI-FI CONTROL."
+                        "Quick Settings intent is not supported."
                 );
-
-            } else {
-
-                result.setText(controls);
             }
         });
 
@@ -75,8 +58,7 @@ public class MainActivity extends Activity {
                 )
         );
 
-        layout.addView(openButton);
-        layout.addView(showButton);
+        layout.addView(button);
 
         setContentView(layout);
     }
