@@ -1,21 +1,44 @@
 package com.example.wifitoggletest;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
-import android.provider.Settings;
+import android.widget.Button;
+import android.widget.ScrollView;
+import android.widget.TextView;
 
-public class MainActivity extends Activity {
+public class DiagnosticActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Intent intent =
-                new Intent(Settings.ACTION_SOUND_SETTINGS);
+        String output =
+                getIntent().getStringExtra("diagnostic");
 
-        startActivity(intent);
+        TextView text = new TextView(this);
+        text.setText(output);
+        text.setTextSize(16);
+        text.setPadding(20, 20, 20, 20);
 
-        finish();
+        Button button = new Button(this);
+        button.setText("Show All");
+
+        button.setOnClickListener(v ->
+                text.setText(output));
+
+        ScrollView scrollView = new ScrollView(this);
+
+        android.widget.LinearLayout layout =
+                new android.widget.LinearLayout(this);
+
+        layout.setOrientation(
+                android.widget.LinearLayout.VERTICAL);
+
+        layout.addView(button);
+        layout.addView(text);
+
+        scrollView.addView(layout);
+
+        setContentView(scrollView);
     }
 }
