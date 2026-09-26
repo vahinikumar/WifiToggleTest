@@ -1,6 +1,7 @@
 package com.example.wifitoggletest;
 
 import android.accessibilityservice.AccessibilityService;
+import android.os.Handler;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -8,132 +9,124 @@ public class WifiAccessibilityService extends AccessibilityService {
 
     private static WifiAccessibilityService instance;
 
+    private final Handler handler = new Handler();
+
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
+
         instance = this;
     }
 
-    public static boolean openNotificationPanel() {
+    public static boolean openNotificationPanel(
+            String mode) {
 
         if (instance == null) {
             return false;
         }
 
-        return instance.performGlobalAction(
-                GLOBAL_ACTION_QUICK_SETTINGS
-        );
-    }
+        boolean opened =
+                instance.performGlobalAction(
+                        GLOBAL_ACTION_QUICK_SETTINGS
+                );
 
-    public static String inspectWindows() {
+        if (opened) {
 
-        if (instance == null) {
-            return "Accessibility Service is not connected.";
+            if (mode.equals("quiet")) {
+
+                instance.handler.postDelayed(() -> {
+
+                    instance.clickMode(
+                            "Vibration mode"
+                    );
+
+                    instance.handler.postDelayed(() -> {
+
+                        instance.clickMode(
+                                "Silent mode"
+                        );
+
+                    }, 1000);
+
+                }, 1000);
+
+            } else {
+
+                instance.handler.postDelayed(() -> {
+
+                    instance.clickMode(
+                            "Silent mode"
+                    );
+
+                }, 1000);
+            }
         }
 
-        StringBuilder result =
-                new StringBuilder();
+        return opened;
+    }
 
-        for (android.view.accessibility.AccessibilityWindowInfo window
-                : instance.getWindows()) {
+    private void clickMode(String mode) {
+
+        for (
+                android.view.accessibility.AccessibilityWindowInfo window
+                : getWindows()
+        ) {
 
             AccessibilityNodeInfo root =
                     window.getRoot();
 
             if (root != null) {
 
-                instance.inspectNode(
+                if (findAndClickMode(
                         root,
-                        result
-                );
+                        mode
+                )) {
+
+                    root.recycle();
+
+                    return;
+                }
 
                 root.recycle();
             }
         }
-
-        return result.toString();
     }
 
-    private void inspectNode(
+    private boolean findAndClickMode(
             AccessibilityNodeInfo node,
-            StringBuilder result) {
+            String mode) {
 
         if (node == null) {
-            return;
+            return false;
         }
 
         CharSequence text =
                 node.getText();
 
         if (text != null &&
-                (text.toString().equalsIgnoreCase("Vibration mode") ||
-                 text.toString().equalsIgnoreCase("Silent mode"))) {
-
-            result.append("\n===== SOUND TILE =====\n");
-
-            result.append("TEXT: ")
-                    .append(text)
-                    .append("\n");
-
-            result.append("NODE CLASS: ")
-                    .append(node.getClassName())
-                    .append("\n");
-
-            result.append("NODE CLICKABLE: ")
-                    .append(node.isClickable())
-                    .append("\n");
-
-            result.append("NODE CHECKABLE: ")
-                    .append(node.isCheckable())
-                    .append("\n");
-
-            result.append("NODE CHECKED: ")
-                    .append(node.isChecked())
-                    .append("\n");
+                text.toString()
+                        .trim()
+                        .equalsIgnoreCase(mode)) {
 
             AccessibilityNodeInfo parent =
                     node.getParent();
 
             if (parent != null) {
 
-                result.append("\n--- PARENT ---\n");
+                if (parent.isClickable()) {
 
-                result.append("CLASS: ")
-                        .append(parent.getClassName())
-                        .append("\n");
+                    boolean clicked =
+                            parent.performAction(
+                                    AccessibilityNodeInfo.ACTION_CLICK
+                            );
 
-                result.append("CLICKABLE: ")
-                        .append(parent.isClickable())
-                        .append("\n");
+                    parent.recycle();
 
-                result.append("CHECKABLE: ")
-                        .append(parent.isCheckable())
-                        .append("\n");
-
-                result.append("CHECKED: ")
-                        .append(parent.isChecked())
-                        .append("\n");
-
-                result.append("SELECTED: ")
-                        .append(parent.isSelected())
-                        .append("\n");
-
-                result.append("ENABLED: ")
-                        .append(parent.isEnabled())
-                        .append("\n");
-
-                result.append("FOCUSED: ")
-                        .append(parent.isFocused())
-                        .append("\n");
-
-                result.append("VISIBLE: ")
-                        .append(parent.isVisibleToUser())
-                        .append("\n");
+                    return clicked;
+                }
 
                 parent.recycle();
             }
-
-            result.append("====================\n");
         }
 
         for (int i = 0;
@@ -145,14 +138,21 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             if (child != null) {
 
-                inspectNode(
+                if (findAndClickMode(
                         child,
-                        result
-                );
+                        mode
+                )) {
+
+                    child.recycle();
+
+                    return true;
+                }
 
                 child.recycle();
             }
         }
+
+        return false;
     }
 
     @Override
