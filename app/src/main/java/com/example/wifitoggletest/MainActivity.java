@@ -1,35 +1,49 @@
 package com.example.wifitoggletest;
 
 import android.app.Activity;
-import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.widget.TextView;
 
 public class MainActivity extends Activity {
+
+    private TextView result;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        AudioManager audioManager =
-                (AudioManager) getSystemService(AUDIO_SERVICE);
+        result = new TextView(this);
+        result.setTextSize(18);
+        result.setPadding(30, 30, 30, 30);
+        result.setText("Opening Control Center...");
 
-        if (audioManager != null) {
+        setContentView(result);
 
-            if (audioManager.getRingerMode()
-                    == AudioManager.RINGER_MODE_NORMAL) {
+        boolean opened =
+                WifiAccessibilityService.openNotificationPanel();
 
-                audioManager.setRingerMode(
-                        AudioManager.RINGER_MODE_VIBRATE
-                );
+        if (opened) {
 
-            } else {
+            result.setText(
+                    "Control Center opened.\n\n" +
+                    "Wait 2 seconds, then check the screen."
+            );
 
-                audioManager.setRingerMode(
-                        AudioManager.RINGER_MODE_NORMAL
-                );
-            }
+            new Handler().postDelayed(() -> {
+
+                String nodes =
+                        WifiAccessibilityService.inspectWindows();
+
+                result.setText(nodes);
+
+            }, 2000);
+
+        } else {
+
+            result.setText(
+                    "Accessibility Service is not connected."
+            );
         }
-
-        finish();
     }
 }
