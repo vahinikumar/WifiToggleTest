@@ -1,6 +1,7 @@
 package com.example.wifitoggletest;
 
 import android.accessibilityservice.AccessibilityService;
+import android.os.Handler;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -8,9 +9,12 @@ public class WifiAccessibilityService extends AccessibilityService {
 
     private static WifiAccessibilityService instance;
 
+    private final Handler handler = new Handler();
+
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
+
         instance = this;
     }
 
@@ -20,149 +24,85 @@ public class WifiAccessibilityService extends AccessibilityService {
             return false;
         }
 
-        return instance.performGlobalAction(
-                GLOBAL_ACTION_QUICK_SETTINGS
-        );
-    }
+        boolean opened =
+                instance.performGlobalAction(
+                        GLOBAL_ACTION_QUICK_SETTINGS
+                );
 
-    public static String inspectWindows() {
+        if (opened) {
 
-        if (instance == null) {
-            return "Accessibility Service is not connected.";
+            instance.handler.postDelayed(() -> {
+
+                instance.clickMode("Vibration mode");
+
+                instance.handler.postDelayed(() -> {
+
+                    instance.clickMode("Silent mode");
+
+                }, 500);
+
+            }, 1000);
         }
 
-        StringBuilder result =
-                new StringBuilder();
+        return opened;
+    }
+
+    private void clickMode(String mode) {
 
         for (android.view.accessibility.AccessibilityWindowInfo window
-                : instance.getWindows()) {
+                : getWindows()) {
 
             AccessibilityNodeInfo root =
                     window.getRoot();
 
             if (root != null) {
 
-                result.append("===== WINDOW =====\n");
+                if (findAndClickMode(root, mode)) {
 
-                instance.inspectNode(
-                        root,
-                        result
-                );
+                    root.recycle();
+
+                    return;
+                }
 
                 root.recycle();
             }
         }
-
-        return result.toString();
     }
 
-    private void inspectNode(
+    private boolean findAndClickMode(
             AccessibilityNodeInfo node,
-            StringBuilder result) {
+            String mode) {
 
-        if (node == null) return;
+        if (node == null) {
+            return false;
+        }
 
         CharSequence text =
                 node.getText();
 
-        CharSequence description =
-                node.getContentDescription();
-
-        String t =
-                text == null
-                        ? ""
-                        : text.toString();
-
-        String d =
-                description == null
-                        ? ""
-                        : description.toString();
-
-        if (t.equalsIgnoreCase("Vibration mode") ||
-                t.equalsIgnoreCase("Silent mode")) {
-
-            result.append("\n\n===== TARGET FOUND =====\n");
-
-            result.append("TEXT: ")
-                    .append(t)
-                    .append("\n");
-
-            result.append("CLASS: ")
-                    .append(node.getClassName())
-                    .append("\n");
-
-            result.append("CLICKABLE: ")
-                    .append(node.isClickable())
-                    .append("\n");
-
-            result.append("CHECKABLE: ")
-                    .append(node.isCheckable())
-                    .append("\n");
-
-            result.append("CHECKED: ")
-                    .append(node.isChecked())
-                    .append("\n");
+        if (text != null &&
+                text.toString().trim()
+                        .equalsIgnoreCase(mode)) {
 
             AccessibilityNodeInfo parent =
                     node.getParent();
 
-            int level = 1;
+            if (parent != null) {
 
-            while (parent != null && level <= 5) {
+                if (parent.isClickable()) {
 
-                result.append("\nPARENT ")
-                        .append(level)
-                        .append(":\n");
+                    boolean clicked =
+                            parent.performAction(
+                                    AccessibilityNodeInfo.ACTION_CLICK
+                            );
 
-                CharSequence parentText =
-                        parent.getText();
+                    parent.recycle();
 
-                CharSequence parentDesc =
-                        parent.getContentDescription();
-
-                result.append("TEXT: ")
-                        .append(
-                                parentText == null
-                                        ? ""
-                                        : parentText.toString()
-                        )
-                        .append("\n");
-
-                result.append("DESC: ")
-                        .append(
-                                parentDesc == null
-                                        ? ""
-                                        : parentDesc.toString()
-                        )
-                        .append("\n");
-
-                result.append("CLASS: ")
-                        .append(parent.getClassName())
-                        .append("\n");
-
-                result.append("CLICKABLE: ")
-                        .append(parent.isClickable())
-                        .append("\n");
-
-                result.append("CHECKABLE: ")
-                        .append(parent.isCheckable())
-                        .append("\n");
-
-                result.append("CHECKED: ")
-                        .append(parent.isChecked())
-                        .append("\n");
-
-                AccessibilityNodeInfo next =
-                        parent.getParent();
+                    return clicked;
+                }
 
                 parent.recycle();
-
-                parent = next;
-
-                level++;
             }
-
-            result.append("\n========================\n");
         }
 
         for (int i = 0;
@@ -174,14 +114,18 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             if (child != null) {
 
-                inspectNode(
-                        child,
-                        result
-                );
+                if (findAndClickMode(child, mode)) {
+
+                    child.recycle();
+
+                    return true;
+                }
 
                 child.recycle();
             }
         }
+
+        return false;
     }
 
     @Override
