@@ -14,7 +14,6 @@ public class WifiAccessibilityService extends AccessibilityService {
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
-
         instance = this;
     }
 
@@ -33,13 +32,10 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             instance.handler.postDelayed(() -> {
 
-                instance.clickMode("Vibration mode");
-
-                instance.handler.postDelayed(() -> {
-
-                    instance.clickMode("Silent mode");
-
-                }, 500);
+                instance.clickModeWithRetry(
+                        "Vibration mode",
+                        0
+                );
 
             }, 1000);
         }
@@ -47,7 +43,42 @@ public class WifiAccessibilityService extends AccessibilityService {
         return opened;
     }
 
-    private void clickMode(String mode) {
+    private void clickModeWithRetry(
+            String mode,
+            int attempt) {
+
+        if (attempt >= 10) {
+            return;
+        }
+
+        if (clickMode(mode)) {
+
+            if (mode.equals("Vibration mode")) {
+
+                handler.postDelayed(() -> {
+
+                    clickModeWithRetry(
+                            "Silent mode",
+                            0
+                    );
+
+                }, 1000);
+            }
+
+            return;
+        }
+
+        handler.postDelayed(() -> {
+
+            clickModeWithRetry(
+                    mode,
+                    attempt + 1
+            );
+
+        }, 500);
+    }
+
+    private boolean clickMode(String mode) {
 
         for (android.view.accessibility.AccessibilityWindowInfo window
                 : getWindows()) {
@@ -61,12 +92,14 @@ public class WifiAccessibilityService extends AccessibilityService {
 
                     root.recycle();
 
-                    return;
+                    return true;
                 }
 
                 root.recycle();
             }
         }
+
+        return false;
     }
 
     private boolean findAndClickMode(
@@ -114,7 +147,9 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             if (child != null) {
 
-                if (findAndClickMode(child, mode)) {
+                if (findAndClickMode(
+                        child,
+                        mode)) {
 
                     child.recycle();
 
@@ -128,14 +163,9 @@ public class WifiAccessibilityService extends AccessibilityService {
         return false;
     }
 
-    /*
-     * Diagnostic method.
-     * Kept because MainActivity currently uses it.
-     */
     public static String inspectWindows() {
 
         if (instance == null) {
-
             return "Accessibility Service is not connected.";
         }
 
@@ -150,7 +180,9 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             if (root != null) {
 
-                result.append("===== WINDOW =====\n");
+                result.append(
+                        "===== WINDOW =====\n"
+                );
 
                 instance.inspectNode(
                         root,
