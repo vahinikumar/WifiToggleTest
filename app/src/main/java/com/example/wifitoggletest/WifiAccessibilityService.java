@@ -3,6 +3,7 @@ package com.example.wifitoggletest;
 import android.accessibilityservice.AccessibilityService;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityWindowInfo;
 
 public class WifiAccessibilityService extends AccessibilityService {
 
@@ -14,21 +15,36 @@ public class WifiAccessibilityService extends AccessibilityService {
 
         if (event == null) return;
 
-        AccessibilityNodeInfo root =
-                getRootInActiveWindow();
-
-        if (root == null) return;
-
         allControls.setLength(0);
 
-        collectNodes(root);
+        // Check every interactive window
+        for (AccessibilityWindowInfo window :
+                getWindows()) {
+
+            AccessibilityNodeInfo root =
+                    window.getRoot();
+
+            if (root != null) {
+
+                allControls.append(
+                        "\n===== WINDOW =====\n"
+                );
+
+                collectNodes(root);
+
+                root.recycle();
+            }
+        }
     }
 
-    private void collectNodes(AccessibilityNodeInfo node) {
+    private void collectNodes(
+            AccessibilityNodeInfo node) {
 
         if (node == null) return;
 
-        CharSequence text = node.getText();
+        CharSequence text =
+                node.getText();
+
         CharSequence description =
                 node.getContentDescription();
 
@@ -38,7 +54,9 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             allControls.append("\n");
 
-            if (text != null && text.length() > 0) {
+            if (text != null &&
+                    text.length() > 0) {
+
                 allControls.append("TEXT: ");
                 allControls.append(text);
                 allControls.append("\n");
@@ -52,10 +70,38 @@ public class WifiAccessibilityService extends AccessibilityService {
                 allControls.append("\n");
             }
 
-            allControls.append("----------------\n");
+            allControls.append(
+                    "CLASS: " +
+                    node.getClassName() +
+                    "\n"
+            );
+
+            allControls.append(
+                    "CLICKABLE: " +
+                    node.isClickable() +
+                    "\n"
+            );
+
+            allControls.append(
+                    "CHECKABLE: " +
+                    node.isCheckable() +
+                    "\n"
+            );
+
+            allControls.append(
+                    "CHECKED: " +
+                    node.isChecked() +
+                    "\n"
+            );
+
+            allControls.append(
+                    "----------------\n"
+            );
         }
 
-        for (int i = 0; i < node.getChildCount(); i++) {
+        for (int i = 0;
+             i < node.getChildCount();
+             i++) {
 
             AccessibilityNodeInfo child =
                     node.getChild(i);
@@ -63,6 +109,7 @@ public class WifiAccessibilityService extends AccessibilityService {
             if (child != null) {
 
                 collectNodes(child);
+
                 child.recycle();
             }
         }
