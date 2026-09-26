@@ -28,23 +28,24 @@ public class WifiAccessibilityService extends AccessibilityService {
                 );
 
         if (opened) {
-            instance.findWifiTile();
+            instance.findVolumeControl();
         }
 
         return opened;
     }
 
-    private void findWifiTile() {
+    private void findVolumeControl() {
 
         handler.postDelayed(() -> {
 
-            for (android.view.accessibility.AccessibilityWindowInfo window : getWindows()) {
+            for (android.view.accessibility.AccessibilityWindowInfo window
+                    : getWindows()) {
 
                 AccessibilityNodeInfo root = window.getRoot();
 
                 if (root != null) {
 
-                    if (searchWifi(root)) {
+                    if (findAndIncreaseVolume(root)) {
                         root.recycle();
                         return;
                     }
@@ -56,20 +57,28 @@ public class WifiAccessibilityService extends AccessibilityService {
         }, 1000);
     }
 
-    private boolean searchWifi(AccessibilityNodeInfo node) {
+    private boolean findAndIncreaseVolume(
+            AccessibilityNodeInfo node) {
 
         if (node == null) return false;
 
         CharSequence text = node.getText();
-        CharSequence description = node.getContentDescription();
+        CharSequence description =
+                node.getContentDescription();
 
         String t = text == null ? "" : text.toString();
-        String d = description == null ? "" : description.toString();
+        String d = description == null
+                ? ""
+                : description.toString();
 
-        if (t.toLowerCase().contains("wi-fi") ||
-                t.toLowerCase().contains("wifi") ||
-                d.toLowerCase().contains("wi-fi") ||
-                d.toLowerCase().contains("wifi")) {
+        String combined =
+                (t + " " + d).toLowerCase();
+
+        /*
+         * Look for Vivo's volume control.
+         */
+        if (combined.contains("volume") ||
+                combined.contains("ring")) {
 
             if (node.isClickable()) {
 
@@ -79,13 +88,17 @@ public class WifiAccessibilityService extends AccessibilityService {
             }
         }
 
-        for (int i = 0; i < node.getChildCount(); i++) {
+        for (int i = 0;
+                i < node.getChildCount();
+                i++) {
 
-            AccessibilityNodeInfo child = node.getChild(i);
+            AccessibilityNodeInfo child =
+                    node.getChild(i);
 
             if (child != null) {
 
-                if (searchWifi(child)) {
+                if (findAndIncreaseVolume(child)) {
+
                     child.recycle();
                     return true;
                 }
