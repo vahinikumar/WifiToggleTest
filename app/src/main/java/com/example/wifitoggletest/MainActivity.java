@@ -15,24 +15,8 @@ public class MainActivity extends Activity {
                         MODE_PRIVATE
                 ).getBoolean("quiet_mode", false);
 
-        if (quietMode) {
+        WifiAccessibilityService.openNotificationPanel();
 
-            // Currently quiet.
-            // Next tap should request normal ringing.
-            WifiAccessibilityService.openNotificationPanel(
-                    "ring"
-            );
-
-        } else {
-
-            // Currently normal ringing.
-            // Next tap should request quiet mode.
-            WifiAccessibilityService.openNotificationPanel(
-                    "quiet"
-            );
-        }
-
-        // Remember the state we requested.
         getSharedPreferences(
                 "ringer_state",
                 MODE_PRIVATE
