@@ -13,22 +13,23 @@ public class MainActivity extends Activity {
         AudioManager audioManager =
                 (AudioManager) getSystemService(AUDIO_SERVICE);
 
-        int ringerMode =
-                audioManager.getRingerMode();
-
-        int vibrationSetting =
-                audioManager.getVibrateSetting(
-                        AudioManager.VIBRATE_TYPE_RINGER
+        int currentVolume =
+                audioManager.getStreamVolume(
+                        AudioManager.STREAM_RING
                 );
 
-        boolean isQuiet =
-                ringerMode == AudioManager.RINGER_MODE_SILENT
-                && vibrationSetting == AudioManager.VIBRATE_SETTING_ON;
+        int maxVolume =
+                audioManager.getStreamMaxVolume(
+                        AudioManager.STREAM_RING
+                );
 
-        if (isQuiet) {
+        if (currentVolume < maxVolume) {
 
-            WifiAccessibilityService.restoreNormalMode();
-
+            audioManager.setStreamVolume(
+                    AudioManager.STREAM_RING,
+                    maxVolume,
+                    0
+            );
         }
 
         finish();
