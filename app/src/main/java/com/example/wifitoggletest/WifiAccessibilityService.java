@@ -42,8 +42,6 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             if (root != null) {
 
-                result.append("===== WINDOW =====\n");
-
                 instance.inspectNode(
                         root,
                         result
@@ -67,44 +65,75 @@ public class WifiAccessibilityService extends AccessibilityService {
         CharSequence text =
                 node.getText();
 
-        CharSequence description =
-                node.getContentDescription();
+        if (text != null &&
+                (text.toString().equalsIgnoreCase("Vibration mode") ||
+                 text.toString().equalsIgnoreCase("Silent mode"))) {
 
-        String t =
-                text == null
-                        ? ""
-                        : text.toString();
-
-        String d =
-                description == null
-                        ? ""
-                        : description.toString();
-
-        if (!t.isEmpty() || !d.isEmpty()) {
+            result.append("\n===== SOUND TILE =====\n");
 
             result.append("TEXT: ")
-                    .append(t)
+                    .append(text)
                     .append("\n");
 
-            result.append("DESC: ")
-                    .append(d)
-                    .append("\n");
-
-            result.append("CLASS: ")
+            result.append("NODE CLASS: ")
                     .append(node.getClassName())
                     .append("\n");
 
-            result.append("CLICKABLE: ")
+            result.append("NODE CLICKABLE: ")
                     .append(node.isClickable())
                     .append("\n");
 
-            result.append("CHECKABLE: ")
+            result.append("NODE CHECKABLE: ")
                     .append(node.isCheckable())
                     .append("\n");
 
-            result.append("CHECKED: ")
+            result.append("NODE CHECKED: ")
                     .append(node.isChecked())
-                    .append("\n\n");
+                    .append("\n");
+
+            AccessibilityNodeInfo parent =
+                    node.getParent();
+
+            if (parent != null) {
+
+                result.append("\n--- PARENT ---\n");
+
+                result.append("CLASS: ")
+                        .append(parent.getClassName())
+                        .append("\n");
+
+                result.append("CLICKABLE: ")
+                        .append(parent.isClickable())
+                        .append("\n");
+
+                result.append("CHECKABLE: ")
+                        .append(parent.isCheckable())
+                        .append("\n");
+
+                result.append("CHECKED: ")
+                        .append(parent.isChecked())
+                        .append("\n");
+
+                result.append("SELECTED: ")
+                        .append(parent.isSelected())
+                        .append("\n");
+
+                result.append("ENABLED: ")
+                        .append(parent.isEnabled())
+                        .append("\n");
+
+                result.append("FOCUSED: ")
+                        .append(parent.isFocused())
+                        .append("\n");
+
+                result.append("VISIBLE: ")
+                        .append(parent.isVisibleToUser())
+                        .append("\n");
+
+                parent.recycle();
+            }
+
+            result.append("====================\n");
         }
 
         for (int i = 0;
