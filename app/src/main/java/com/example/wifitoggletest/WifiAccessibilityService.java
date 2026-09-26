@@ -82,21 +82,36 @@ public class WifiAccessibilityService extends AccessibilityService {
             AccessibilityNodeInfo.RangeInfo range =
                     node.getRangeInfo();
 
+            String result;
+
             if (range != null) {
 
-                float min = range.getMin();
-                float max = range.getMax();
-                float current = range.getCurrent();
+                result =
+                        "RING VOLUME\n\n"
+                        + "MIN: " + range.getMin()
+                        + "\nMAX: " + range.getMax()
+                        + "\nCURRENT: " + range.getCurrent();
 
-                android.util.Log.d(
-                        "RINGER_DIAGNOSTIC",
-                        "Ring volume -> MIN: "
-                                + min
-                                + " MAX: "
-                                + max
-                                + " CURRENT: "
-                                + current);
+            } else {
+
+                result =
+                        "RING VOLUME\n\n"
+                        + "RangeInfo is NULL";
             }
+
+            Intent intent =
+                    new Intent(
+                            this,
+                            DiagnosticActivity.class);
+
+            intent.putExtra(
+                    "diagnostic",
+                    result);
+
+            intent.addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            startActivity(intent);
 
             return true;
         }
