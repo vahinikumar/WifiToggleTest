@@ -2,7 +2,6 @@ package com.example.wifitoggletest;
 
 import android.accessibilityservice.AccessibilityService;
 import android.os.Handler;
-import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 public class WifiAccessibilityService extends AccessibilityService {
@@ -11,6 +10,8 @@ public class WifiAccessibilityService extends AccessibilityService {
 
     private final Handler handler = new Handler();
 
+    private boolean restoreRequested = false;
+
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
@@ -18,11 +19,13 @@ public class WifiAccessibilityService extends AccessibilityService {
         instance = this;
     }
 
-    public static boolean openNotificationPanel() {
+    public static boolean restoreNormalMode() {
 
         if (instance == null) {
             return false;
         }
+
+        instance.restoreRequested = true;
 
         boolean opened =
                 instance.performGlobalAction(
@@ -33,7 +36,9 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             instance.handler.postDelayed(() -> {
 
-                instance.clickSilentMode();
+                if (instance.restoreRequested) {
+                    instance.clickSilentMode();
+                }
 
             }, 1000);
         }
@@ -57,12 +62,16 @@ public class WifiAccessibilityService extends AccessibilityService {
 
                     root.recycle();
 
+                    restoreRequested = false;
+
                     return;
                 }
 
                 root.recycle();
             }
         }
+
+        restoreRequested = false;
     }
 
     private boolean findAndClickSilentMode(
@@ -126,7 +135,10 @@ public class WifiAccessibilityService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(
-            AccessibilityEvent event) {
+            android.view.accessibility.AccessibilityEvent event) {
+
+        // Do nothing automatically.
+        // The service acts only when the app calls restoreNormalMode().
     }
 
     @Override
