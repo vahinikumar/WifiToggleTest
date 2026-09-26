@@ -62,6 +62,7 @@ public class WifiAccessibilityService extends AccessibilityService {
                 new AccessibilityNodeInfo[windows.size()];
 
         for (int i = 0; i < windows.size(); i++) {
+
             roots[i] = windows.get(i).getRoot();
         }
 
@@ -73,11 +74,15 @@ public class WifiAccessibilityService extends AccessibilityService {
         if (node == null) return false;
 
         CharSequence text = node.getText();
+
         CharSequence description =
                 node.getContentDescription();
 
         String t = text == null ? "" : text.toString();
-        String d = description == null ? "" : description.toString();
+
+        String d = description == null
+                ? ""
+                : description.toString();
 
         if (t.toLowerCase().contains("wi-fi") ||
                 t.toLowerCase().contains("wifi") ||
@@ -100,7 +105,9 @@ public class WifiAccessibilityService extends AccessibilityService {
             if (child != null) {
 
                 if (searchWifi(child)) {
+
                     child.recycle();
+
                     return true;
                 }
 
@@ -109,6 +116,110 @@ public class WifiAccessibilityService extends AccessibilityService {
         }
 
         return false;
+    }
+
+    /*
+     * Diagnostic method.
+     * Reads everything Accessibility can currently see.
+     */
+    public static String inspectWindows() {
+
+        if (instance == null) {
+
+            return "Accessibility Service is not connected.";
+        }
+
+        StringBuilder result =
+                new StringBuilder();
+
+        for (android.view.accessibility.AccessibilityWindowInfo window
+                : instance.getWindows()) {
+
+            AccessibilityNodeInfo root =
+                    window.getRoot();
+
+            if (root != null) {
+
+                result.append("===== WINDOW =====\n");
+
+                instance.inspectNode(
+                        root,
+                        result
+                );
+
+                root.recycle();
+            }
+        }
+
+        return result.toString();
+    }
+
+    private void inspectNode(
+            AccessibilityNodeInfo node,
+            StringBuilder result) {
+
+        if (node == null) return;
+
+        CharSequence text =
+                node.getText();
+
+        CharSequence description =
+                node.getContentDescription();
+
+        String t =
+                text == null
+                        ? ""
+                        : text.toString();
+
+        String d =
+                description == null
+                        ? ""
+                        : description.toString();
+
+        if (!t.isEmpty() || !d.isEmpty()) {
+
+            result.append("TEXT: ")
+                    .append(t)
+                    .append("\n");
+
+            result.append("DESC: ")
+                    .append(d)
+                    .append("\n");
+
+            result.append("CLASS: ")
+                    .append(node.getClassName())
+                    .append("\n");
+
+            result.append("CLICKABLE: ")
+                    .append(node.isClickable())
+                    .append("\n");
+
+            result.append("CHECKABLE: ")
+                    .append(node.isCheckable())
+                    .append("\n");
+
+            result.append("CHECKED: ")
+                    .append(node.isChecked())
+                    .append("\n\n");
+        }
+
+        for (int i = 0;
+                i < node.getChildCount();
+                i++) {
+
+            AccessibilityNodeInfo child =
+                    node.getChild(i);
+
+            if (child != null) {
+
+                inspectNode(
+                        child,
+                        result
+                );
+
+                child.recycle();
+            }
+        }
     }
 
     @Override
