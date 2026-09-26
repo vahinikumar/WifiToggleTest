@@ -1,78 +1,83 @@
 package com.example.wifitoggletest;
 
-import android.accessibilityservice.AccessibilityService;
-import android.view.accessibility.AccessibilityEvent;
-import android.view.accessibility.AccessibilityNodeInfo;
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.LinearLayout;
+import android.view.ViewGroup;
 
-public class WifiAccessibilityService extends AccessibilityService {
+public class MainActivity extends Activity {
 
-    private static StringBuilder allControls =
-            new StringBuilder();
-
-    @Override
-    public void onAccessibilityEvent(AccessibilityEvent event) {
-
-        if (event == null) return;
-
-        AccessibilityNodeInfo root =
-                getRootInActiveWindow();
-
-        if (root == null) return;
-
-        allControls.setLength(0);
-
-        collectNodes(root);
-    }
-
-    private void collectNodes(AccessibilityNodeInfo node) {
-
-        if (node == null) return;
-
-        CharSequence text = node.getText();
-        CharSequence description =
-                node.getContentDescription();
-
-        if ((text != null && text.length() > 0) ||
-                (description != null &&
-                        description.length() > 0)) {
-
-            allControls.append("\n");
-
-            if (text != null && text.length() > 0) {
-                allControls.append("TEXT: ");
-                allControls.append(text);
-                allControls.append("\n");
-            }
-
-            if (description != null &&
-                    description.length() > 0) {
-
-                allControls.append("DESC: ");
-                allControls.append(description);
-                allControls.append("\n");
-            }
-
-            allControls.append("----------------\n");
-        }
-
-        for (int i = 0; i < node.getChildCount(); i++) {
-
-            AccessibilityNodeInfo child =
-                    node.getChild(i);
-
-            if (child != null) {
-
-                collectNodes(child);
-                child.recycle();
-            }
-        }
-    }
-
-    public static String getAllControls() {
-        return allControls.toString();
-    }
+    private TextView result;
 
     @Override
-    public void onInterrupt() {
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(30, 30, 30, 30);
+
+        result = new TextView(this);
+        result.setTextSize(16);
+        result.setText("Wi-Fi diagnostic");
+
+        Button openButton = new Button(this);
+        openButton.setText("OPEN WI-FI CONTROL");
+
+        Button showButton = new Button(this);
+        showButton.setText("SHOW ALL CONTROLS");
+
+        openButton.setOnClickListener(v -> {
+
+            try {
+                Intent intent =
+                        new Intent(Settings.Panel.ACTION_WIFI);
+
+                startActivity(intent);
+
+            } catch (Exception e) {
+
+                Intent intent =
+                        new Intent(Settings.ACTION_WIFI_SETTINGS);
+
+                startActivity(intent);
+            }
+        });
+
+        showButton.setOnClickListener(v -> {
+
+            String controls =
+                    WifiAccessibilityService.getAllControls();
+
+            if (controls.isEmpty()) {
+
+                result.setText(
+                        "No controls detected yet.\n\n" +
+                        "First tap OPEN WI-FI CONTROL."
+                );
+
+            } else {
+
+                result.setText(controls);
+            }
+        });
+
+        layout.addView(
+                result,
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        0,
+                        1
+                )
+        );
+
+        layout.addView(openButton);
+        layout.addView(showButton);
+
+        setContentView(layout);
     }
 }
