@@ -7,7 +7,6 @@ import android.view.accessibility.AccessibilityNodeInfo;
 public class WifiAccessibilityService extends AccessibilityService {
 
     private static WifiAccessibilityService instance;
-
     private final Handler handler = new Handler();
 
     @Override
@@ -16,48 +15,51 @@ public class WifiAccessibilityService extends AccessibilityService {
         instance = this;
     }
 
-    public static boolean openNotificationPanel() {
+    public static boolean openSoundSettings() {
 
-        if (instance == null) {
+        if (instance == null) return false;
+
+        try {
+            android.content.Intent intent =
+                    new android.content.Intent(
+                            android.provider.Settings.ACTION_SOUND_SETTINGS);
+
+            intent.addFlags(
+                    android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            instance.startActivity(intent);
+
+            instance.handler.postDelayed(
+                    () -> instance.findRingVolume(),
+                    1500);
+
+            return true;
+
+        } catch (Exception e) {
             return false;
         }
-
-        boolean opened =
-                instance.performGlobalAction(
-                        GLOBAL_ACTION_NOTIFICATIONS
-                );
-
-        if (opened) {
-            instance.findVolumeControl();
-        }
-
-        return opened;
     }
 
-    private void findVolumeControl() {
+    private void findRingVolume() {
 
-        handler.postDelayed(() -> {
+        for (android.view.accessibility.AccessibilityWindowInfo window
+                : getWindows()) {
 
-            for (android.view.accessibility.AccessibilityWindowInfo window
-                    : getWindows()) {
+            AccessibilityNodeInfo root = window.getRoot();
 
-                AccessibilityNodeInfo root = window.getRoot();
+            if (root != null) {
 
-                if (root != null) {
-
-                    if (findAndIncreaseVolume(root)) {
-                        root.recycle();
-                        return;
-                    }
-
+                if (findVolumeSlider(root)) {
                     root.recycle();
+                    return;
                 }
-            }
 
-        }, 1000);
+                root.recycle();
+            }
+        }
     }
 
-    private boolean findAndIncreaseVolume(
+    private boolean findVolumeSlider(
             AccessibilityNodeInfo node) {
 
         if (node == null) return false;
@@ -74,17 +76,17 @@ public class WifiAccessibilityService extends AccessibilityService {
         String combined =
                 (t + " " + d).toLowerCase();
 
-        /*
-         * Look for Vivo's volume control.
-         */
-        if (combined.contains("volume") ||
-                combined.contains("ring")) {
+        if (combined.contains("ring volume") ||
+                combined.equals("ring")) {
 
-            if (node.isClickable()) {
+            if (node.isFocusable() ||
+                    node.isClickable()) {
 
-                return node.performAction(
-                        AccessibilityNodeInfo.ACTION_CLICK
-                );
+                if (node.performAction(
+                        AccessibilityNodeInfo.ACTION_FOCUS)) {
+
+                    return true;
+                }
             }
         }
 
@@ -97,8 +99,7 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             if (child != null) {
 
-                if (findAndIncreaseVolume(child)) {
-
+                if (findVolumeSlider(child)) {
                     child.recycle();
                     return true;
                 }
