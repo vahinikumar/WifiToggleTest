@@ -2,6 +2,7 @@ package com.example.wifitoggletest;
 
 import android.accessibilityservice.AccessibilityService;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -23,17 +24,18 @@ public class WifiAccessibilityService extends AccessibilityService {
         if (instance == null) return false;
 
         try {
+
             Intent intent =
                     new Intent(Settings.ACTION_SOUND_SETTINGS);
 
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK);
 
             instance.startActivity(intent);
 
             instance.handler.postDelayed(
-                    () -> instance.inspectScreen(),
-                    1500
-            );
+                    () -> instance.setRingVolumeToMaximum(),
+                    1500);
 
             return true;
 
@@ -42,35 +44,30 @@ public class WifiAccessibilityService extends AccessibilityService {
         }
     }
 
-    private void inspectScreen() {
-
-        StringBuilder result = new StringBuilder();
+    private void setRingVolumeToMaximum() {
 
         for (android.view.accessibility.AccessibilityWindowInfo window
                 : getWindows()) {
 
-            AccessibilityNodeInfo root = window.getRoot();
+            AccessibilityNodeInfo root =
+                    window.getRoot();
 
             if (root != null) {
 
-                inspectNode(root, result);
+                if (findRingVolume(root)) {
+                    root.recycle();
+                    return;
+                }
 
                 root.recycle();
             }
         }
-
-        final String output = result.length() == 0
-                ? "No accessibility nodes found."
-                : result.toString();
-
-        handler.post(() -> showResult(output));
     }
 
-    private void inspectNode(
-            AccessibilityNodeInfo node,
-            StringBuilder result) {
+    private boolean findRingVolume(
+            AccessibilityNodeInfo node) {
 
-        if (node == null) return;
+        if (node == null) return false;
 
         CharSequence text = node.getText();
         CharSequence description =
@@ -81,16 +78,24 @@ public class WifiAccessibilityService extends AccessibilityService {
                 ? ""
                 : description.toString();
 
-        if (!t.isEmpty() || !d.isEmpty()) {
+        boolean isRingVolume =
+                (t.equalsIgnoreCase("Ring volume") ||
+                 d.equalsIgnoreCase("Ring volume")) &&
+                "android.widget.SeekBar".equals(
+                        node.getClassName());
 
-            result.append(
-                    "TEXT: " + t +
-                    "\nDESC: " + d +
-                    "\nCLASS: " + node.getClassName() +
-                    "\nCLICKABLE: " + node.isClickable() +
-                    "\nFOCUSABLE: " + node.isFocusable() +
-                    "\n\n"
-            );
+        if (isRingVolume) {
+
+            Bundle arguments = new Bundle();
+
+            arguments.putInt(
+                    AccessibilityNodeInfo
+                            .ACTION_ARGUMENT_PROGRESS_VALUE_INT,
+                    100);
+
+            return node.performAction(
+                    AccessibilityNodeInfo.ACTION_SET_PROGRESS,
+                    arguments);
         }
 
         for (int i = 0;
@@ -102,25 +107,16 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             if (child != null) {
 
-                inspectNode(child, result);
+                if (findRingVolume(child)) {
+                    child.recycle();
+                    return true;
+                }
 
                 child.recycle();
             }
         }
-    }
 
-    private void showResult(String output) {
-
-        Intent intent =
-                new Intent(this, DiagnosticActivity.class);
-
-        intent.putExtra("diagnostic", output);
-
-        intent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK
-        );
-
-        startActivity(intent);
+        return false;
     }
 
     @Override
