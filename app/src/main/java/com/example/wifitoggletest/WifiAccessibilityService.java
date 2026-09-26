@@ -1,14 +1,13 @@
 package com.example.wifitoggletest;
 
 import android.accessibilityservice.AccessibilityService;
-import android.os.Handler;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.widget.Toast;
 
 public class WifiAccessibilityService extends AccessibilityService {
 
-    private final Handler handler = new Handler();
+    private static StringBuilder allControls =
+            new StringBuilder();
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
@@ -20,11 +19,12 @@ public class WifiAccessibilityService extends AccessibilityService {
 
         if (root == null) return;
 
-        // Show the controls found on the screen
-        showNodes(root);
+        allControls.setLength(0);
+
+        collectNodes(root);
     }
 
-    private void showNodes(AccessibilityNodeInfo node) {
+    private void collectNodes(AccessibilityNodeInfo node) {
 
         if (node == null) return;
 
@@ -32,25 +32,27 @@ public class WifiAccessibilityService extends AccessibilityService {
         CharSequence description =
                 node.getContentDescription();
 
-        if (text != null && text.length() > 0) {
+        if ((text != null && text.length() > 0) ||
+                (description != null &&
+                        description.length() > 0)) {
 
-            Toast.makeText(
-                    this,
-                    "TEXT: " + text,
-                    Toast.LENGTH_SHORT
-            ).show();
+            allControls.append("\n");
 
-        }
+            if (text != null && text.length() > 0) {
+                allControls.append("TEXT: ");
+                allControls.append(text);
+                allControls.append("\n");
+            }
 
-        if (description != null &&
-                description.length() > 0) {
+            if (description != null &&
+                    description.length() > 0) {
 
-            Toast.makeText(
-                    this,
-                    "DESC: " + description,
-                    Toast.LENGTH_SHORT
-            ).show();
+                allControls.append("DESC: ");
+                allControls.append(description);
+                allControls.append("\n");
+            }
 
+            allControls.append("----------------\n");
         }
 
         for (int i = 0; i < node.getChildCount(); i++) {
@@ -60,10 +62,14 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             if (child != null) {
 
-                showNodes(child);
+                collectNodes(child);
                 child.recycle();
             }
         }
+    }
+
+    public static String getAllControls() {
+        return allControls.toString();
     }
 
     @Override
