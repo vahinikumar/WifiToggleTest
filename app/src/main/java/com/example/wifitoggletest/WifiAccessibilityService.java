@@ -3,10 +3,12 @@ package com.example.wifitoggletest;
 import android.accessibilityservice.AccessibilityService;
 import android.os.Handler;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.Toast;
 
 public class WifiAccessibilityService extends AccessibilityService {
 
     private static WifiAccessibilityService instance;
+
     private final Handler handler = new Handler();
 
     @Override
@@ -30,7 +32,7 @@ public class WifiAccessibilityService extends AccessibilityService {
             instance.startActivity(intent);
 
             instance.handler.postDelayed(
-                    () -> instance.findRingVolume(),
+                    () -> instance.inspectScreen(),
                     1500);
 
             return true;
@@ -40,7 +42,9 @@ public class WifiAccessibilityService extends AccessibilityService {
         }
     }
 
-    private void findRingVolume() {
+    private void inspectScreen() {
+
+        StringBuilder result = new StringBuilder();
 
         for (android.view.accessibility.AccessibilityWindowInfo window
                 : getWindows()) {
@@ -49,20 +53,26 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             if (root != null) {
 
-                if (findVolumeSlider(root)) {
-                    root.recycle();
-                    return;
-                }
+                inspectNode(root, result);
 
                 root.recycle();
             }
         }
+
+        Toast.makeText(
+                this,
+                result.length() == 0
+                        ? "No accessibility nodes found"
+                        : result.toString(),
+                Toast.LENGTH_LONG
+        ).show();
     }
 
-    private boolean findVolumeSlider(
-            AccessibilityNodeInfo node) {
+    private void inspectNode(
+            AccessibilityNodeInfo node,
+            StringBuilder result) {
 
-        if (node == null) return false;
+        if (node == null) return;
 
         CharSequence text = node.getText();
         CharSequence description =
@@ -73,21 +83,19 @@ public class WifiAccessibilityService extends AccessibilityService {
                 ? ""
                 : description.toString();
 
-        String combined =
-                (t + " " + d).toLowerCase();
+        if (!t.isEmpty() || !d.isEmpty()) {
 
-        if (combined.contains("ring volume") ||
-                combined.equals("ring")) {
-
-            if (node.isFocusable() ||
-                    node.isClickable()) {
-
-                if (node.performAction(
-                        AccessibilityNodeInfo.ACTION_FOCUS)) {
-
-                    return true;
-                }
-            }
+            result.append(
+                    "TEXT: " + t +
+                    "\nDESC: " + d +
+                    "\nCLASS: " +
+                    node.getClassName() +
+                    "\nCLICK: " +
+                    node.isClickable() +
+                    "\nFOCUS: " +
+                    node.isFocusable() +
+                    "\n\n"
+            );
         }
 
         for (int i = 0;
@@ -99,16 +107,11 @@ public class WifiAccessibilityService extends AccessibilityService {
 
             if (child != null) {
 
-                if (findVolumeSlider(child)) {
-                    child.recycle();
-                    return true;
-                }
+                inspectNode(child, result);
 
                 child.recycle();
             }
         }
-
-        return false;
     }
 
     @Override
