@@ -55,12 +55,25 @@ public class GrandmaWidget extends AppWidgetProvider {
                         context.getSystemService(
                                 Context.AUDIO_SERVICE);
 
-        boolean ringerOn =
-                audioManager != null &&
-                audioManager.getStreamVolume(
-                        AudioManager.STREAM_RING) ==
-                audioManager.getStreamMaxVolume(
-                        AudioManager.STREAM_RING);
+        boolean ringerOn = false;
+
+        if (audioManager != null) {
+
+            int ringMode =
+                    audioManager.getRingerMode();
+
+            int currentVolume =
+                    audioManager.getStreamVolume(
+                            AudioManager.STREAM_RING);
+
+            int maxVolume =
+                    audioManager.getStreamMaxVolume(
+                            AudioManager.STREAM_RING);
+
+            ringerOn =
+                    ringMode == AudioManager.RINGER_MODE_NORMAL
+                    && currentVolume == maxVolume;
+        }
 
         for (int appWidgetId : appWidgetIds) {
 
