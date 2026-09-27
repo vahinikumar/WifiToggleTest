@@ -32,11 +32,13 @@ public class GrandmaWidget extends AppWidgetProvider {
         ComponentName componentName =
                 new ComponentName(
                         context,
-                        GrandmaWidget.class);
+                        GrandmaWidget.class
+                );
 
         int[] widgetIds =
                 manager.getAppWidgetIds(
-                        componentName);
+                        componentName
+                );
 
         updateWidgets(
                 context,
@@ -53,7 +55,8 @@ public class GrandmaWidget extends AppWidgetProvider {
         AudioManager audioManager =
                 (AudioManager)
                         context.getSystemService(
-                                Context.AUDIO_SERVICE);
+                                Context.AUDIO_SERVICE
+                        );
 
         boolean ringerOn = false;
 
@@ -64,15 +67,19 @@ public class GrandmaWidget extends AppWidgetProvider {
 
             int currentVolume =
                     audioManager.getStreamVolume(
-                            AudioManager.STREAM_RING);
+                            AudioManager.STREAM_RING
+                    );
 
             int maxVolume =
                     audioManager.getStreamMaxVolume(
-                            AudioManager.STREAM_RING);
+                            AudioManager.STREAM_RING
+                    );
 
             ringerOn =
-                    ringMode == AudioManager.RINGER_MODE_NORMAL
-                    && currentVolume == maxVolume;
+                    ringMode ==
+                            AudioManager.RINGER_MODE_NORMAL
+                    &&
+                    currentVolume == maxVolume;
         }
 
         for (int appWidgetId : appWidgetIds) {
@@ -80,25 +87,29 @@ public class GrandmaWidget extends AppWidgetProvider {
             RemoteViews views =
                     new RemoteViews(
                             context.getPackageName(),
-                            R.layout.grandma_widget);
+                            R.layout.grandma_widget
+                    );
 
             if (ringerOn) {
 
                 views.setImageViewResource(
                         R.id.wifi_widget_image,
-                        R.drawable.ringer_on);
+                        R.drawable.ringer_on
+                );
 
             } else {
 
                 views.setImageViewResource(
                         R.id.wifi_widget_image,
-                        R.drawable.ringer_off);
+                        R.drawable.ringer_off
+                );
             }
 
             Intent intent =
                     new Intent(
                             context,
-                            MainActivity.class);
+                            MainActivity.class
+                    );
 
             PendingIntent pendingIntent =
                     PendingIntent.getActivity(
@@ -118,6 +129,23 @@ public class GrandmaWidget extends AppWidgetProvider {
                     appWidgetId,
                     views
             );
+        }
+    }
+
+    @Override
+    public void onReceive(
+            Context context,
+            Intent intent) {
+
+        super.onReceive(
+                context,
+                intent
+        );
+
+        if (AudioManager.RINGER_MODE_CHANGED_ACTION
+                .equals(intent.getAction())) {
+
+            updateAllWidgets(context);
         }
     }
 }
