@@ -2,6 +2,7 @@ package com.example.wifitoggletest;
 
 import android.accessibilityservice.AccessibilityService;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.accessibility.AccessibilityEvent;
@@ -14,12 +15,24 @@ public class WifiAccessibilityService extends AccessibilityService {
     private final android.os.Handler handler =
             new android.os.Handler();
 
+    private int lastRingerMode = -1;
+
     @Override
     protected void onServiceConnected() {
 
         super.onServiceConnected();
 
         instance = this;
+
+        AudioManager audioManager =
+                (AudioManager)
+                        getSystemService(AUDIO_SERVICE);
+
+        if (audioManager != null) {
+
+            lastRingerMode =
+                    audioManager.getRingerMode();
+        }
     }
 
     public static boolean openSoundSettings() {
@@ -145,6 +158,26 @@ public class WifiAccessibilityService extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(
             AccessibilityEvent event) {
+
+        AudioManager audioManager =
+                (AudioManager)
+                        getSystemService(AUDIO_SERVICE);
+
+        if (audioManager == null) {
+            return;
+        }
+
+        int currentRingerMode =
+                audioManager.getRingerMode();
+
+        if (currentRingerMode != lastRingerMode) {
+
+            lastRingerMode =
+                    currentRingerMode;
+
+            GrandmaWidget.updateAllWidgets(
+                    getApplicationContext());
+        }
     }
 
     @Override
