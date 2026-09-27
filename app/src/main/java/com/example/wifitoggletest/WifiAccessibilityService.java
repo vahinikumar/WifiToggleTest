@@ -1,151 +1,163 @@
 package com.example.wifitoggletest;
 
-import android.app.PendingIntent;
-import android.appwidget.AppWidgetManager;
-import android.appwidget.AppWidgetProvider;
-import android.content.ComponentName;
-import android.content.Context;
+import android.accessibilityservice.AccessibilityService;
 import android.content.Intent;
-import android.media.AudioManager;
-import android.widget.RemoteViews;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
 
-public class GrandmaWidget extends AppWidgetProvider {
+public class WifiAccessibilityService extends AccessibilityService {
+
+    private static WifiAccessibilityService instance;
+
+    private final android.os.Handler handler =
+            new android.os.Handler();
 
     @Override
-    public void onUpdate(
-            Context context,
-            AppWidgetManager appWidgetManager,
-            int[] appWidgetIds) {
+    protected void onServiceConnected() {
 
-        updateWidgets(
-                context,
-                appWidgetManager,
-                appWidgetIds
-        );
+        super.onServiceConnected();
+
+        instance = this;
     }
 
-    public static void updateAllWidgets(Context context) {
+    public static boolean openSoundSettings() {
 
-        AppWidgetManager manager =
-                AppWidgetManager.getInstance(context);
-
-        ComponentName componentName =
-                new ComponentName(
-                        context,
-                        GrandmaWidget.class
-                );
-
-        int[] widgetIds =
-                manager.getAppWidgetIds(
-                        componentName
-                );
-
-        updateWidgets(
-                context,
-                manager,
-                widgetIds
-        );
-    }
-
-    private static void updateWidgets(
-            Context context,
-            AppWidgetManager appWidgetManager,
-            int[] appWidgetIds) {
-
-        AudioManager audioManager =
-                (AudioManager)
-                        context.getSystemService(
-                                Context.AUDIO_SERVICE
-                        );
-
-        boolean ringerOn = false;
-
-        if (audioManager != null) {
-
-            int ringMode =
-                    audioManager.getRingerMode();
-
-            int currentVolume =
-                    audioManager.getStreamVolume(
-                            AudioManager.STREAM_RING
-                    );
-
-            int maxVolume =
-                    audioManager.getStreamMaxVolume(
-                            AudioManager.STREAM_RING
-                    );
-
-            ringerOn =
-                    ringMode ==
-                            AudioManager.RINGER_MODE_NORMAL
-                    &&
-                    currentVolume == maxVolume;
+        if (instance == null) {
+            return false;
         }
 
-        for (int appWidgetId : appWidgetIds) {
+        Intent intent =
+                new Intent(
+                        Settings.ACTION_SOUND_SETTINGS);
 
-            RemoteViews views =
-                    new RemoteViews(
-                            context.getPackageName(),
-                            R.layout.grandma_widget
-                    );
+        intent.addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK);
 
-            if (ringerOn) {
+        instance.startActivity(intent);
 
-                views.setImageViewResource(
-                        R.id.wifi_widget_image,
-                        R.drawable.ringer_on
-                );
+        instance.handler.postDelayed(
+                () -> instance.setRingVolumeToMaximum(),
+                1500);
 
-            } else {
+        return true;
+    }
 
-                views.setImageViewResource(
-                        R.id.wifi_widget_image,
-                        R.drawable.ringer_off
-                );
+    private void setRingVolumeToMaximum() {
+
+        for (android.view.accessibility
+                .AccessibilityWindowInfo window
+                : getWindows()) {
+
+            AccessibilityNodeInfo root =
+                    window.getRoot();
+
+            if (root != null) {
+
+                if (findRingVolume(root)) {
+
+                    root.recycle();
+
+                    handler.postDelayed(
+                            () -> {
+
+                                GrandmaWidget.updateAllWidgets(
+                                        getApplicationContext()
+                                );
+
+                            },
+                            2000);
+
+                    return;
+                }
+
+                root.recycle();
             }
-
-            Intent intent =
-                    new Intent(
-                            context,
-                            MainActivity.class
-                    );
-
-            PendingIntent pendingIntent =
-                    PendingIntent.getActivity(
-                            context,
-                            0,
-                            intent,
-                            PendingIntent.FLAG_UPDATE_CURRENT |
-                            PendingIntent.FLAG_IMMUTABLE
-                    );
-
-            views.setOnClickPendingIntent(
-                    R.id.wifi_widget_image,
-                    pendingIntent
-            );
-
-            appWidgetManager.updateAppWidget(
-                    appWidgetId,
-                    views
-            );
         }
     }
 
-    @Override
-    public void onReceive(
-            Context context,
-            Intent intent) {
+    private boolean findRingVolume(
+            AccessibilityNodeInfo node) {
 
-        super.onReceive(
-                context,
-                intent
-        );
+        if (node == null) return false;
 
-        if (AudioManager.RINGER_MODE_CHANGED_ACTION
-                .equals(intent.getAction())) {
+        CharSequence text =
+                node.getText();
 
-            updateAllWidgets(context);
+        CharSequence description =
+                node.getContentDescription();
+
+        String t =
+                text == null
+                        ? ""
+                        : text.toString();
+
+        String d =
+                description == null
+                        ? ""
+                        : description.toString();
+
+        boolean isRingVolume =
+                (t.equalsIgnoreCase("Ring volume") ||
+                 d.equalsIgnoreCase("Ring volume"))
+                &&
+                "android.widget.SeekBar".equals(
+                        node.getClassName());
+
+        if (isRingVolume) {
+
+            Bundle arguments =
+                    new Bundle();
+
+            arguments.putFloat(
+                    "android.view.accessibility.action.ARGUMENT_PROGRESS_VALUE",
+                    15f);
+
+            return node.performAction(
+                    16908349,
+                    arguments);
         }
+
+        for (int i = 0;
+                i < node.getChildCount();
+                i++) {
+
+            AccessibilityNodeInfo child =
+                    node.getChild(i);
+
+            if (child != null) {
+
+                if (findRingVolume(child)) {
+
+                    child.recycle();
+
+                    return true;
+                }
+
+                child.recycle();
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public void onAccessibilityEvent(
+            AccessibilityEvent event) {
+    }
+
+    @Override
+    public void onInterrupt() {
+    }
+
+    @Override
+    public void onDestroy() {
+
+        instance = null;
+
+        handler.removeCallbacksAndMessages(null);
+
+        super.onDestroy();
     }
 }
