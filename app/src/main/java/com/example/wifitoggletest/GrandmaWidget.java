@@ -34,7 +34,7 @@ public class GrandmaWidget extends AppWidgetProvider {
                             PendingIntent.FLAG_IMMUTABLE);
 
             views.setOnClickPendingIntent(
-                    R.id.ringer_widget_image,
+                    R.id.wifi_widget_image,
                     pendingIntent);
 
             appWidgetManager.updateAppWidget(
