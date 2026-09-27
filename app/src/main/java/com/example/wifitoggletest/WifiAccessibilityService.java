@@ -16,6 +16,7 @@ public class WifiAccessibilityService extends AccessibilityService {
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
+
         instance = this;
     }
 
@@ -48,7 +49,16 @@ public class WifiAccessibilityService extends AccessibilityService {
             if (root != null) {
 
                 if (findRingVolume(root)) {
+
                     root.recycle();
+
+                    handler.postDelayed(
+                            () -> GrandmaWidget.updateAllWidgets(
+                                    this
+                            ),
+                            1000
+                    );
+
                     return;
                 }
 
@@ -62,14 +72,21 @@ public class WifiAccessibilityService extends AccessibilityService {
 
         if (node == null) return false;
 
-        CharSequence text = node.getText();
+        CharSequence text =
+                node.getText();
+
         CharSequence description =
                 node.getContentDescription();
 
-        String t = text == null ? "" : text.toString();
-        String d = description == null
-                ? ""
-                : description.toString();
+        String t =
+                text == null
+                        ? ""
+                        : text.toString();
+
+        String d =
+                description == null
+                        ? ""
+                        : description.toString();
 
         boolean isRingVolume =
                 (t.equalsIgnoreCase("Ring volume") ||
@@ -79,7 +96,8 @@ public class WifiAccessibilityService extends AccessibilityService {
 
         if (isRingVolume) {
 
-            Bundle arguments = new Bundle();
+            Bundle arguments =
+                    new Bundle();
 
             arguments.putFloat(
                     "android.view.accessibility.action.ARGUMENT_PROGRESS_VALUE",
@@ -100,7 +118,9 @@ public class WifiAccessibilityService extends AccessibilityService {
             if (child != null) {
 
                 if (findRingVolume(child)) {
+
                     child.recycle();
+
                     return true;
                 }
 
@@ -122,7 +142,9 @@ public class WifiAccessibilityService extends AccessibilityService {
 
     @Override
     public void onDestroy() {
+
         instance = null;
+
         super.onDestroy();
     }
 }
