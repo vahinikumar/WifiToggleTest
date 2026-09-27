@@ -1,8 +1,6 @@
 package com.example.wifitoggletest;
 
 import android.accessibilityservice.AccessibilityService;
-import android.appwidget.AppWidgetManager;
-import android.content.Intent;
 import android.os.Handler;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -11,7 +9,8 @@ public class WifiAccessibilityService extends AccessibilityService {
 
     private static WifiAccessibilityService instance;
 
-    private final Handler handler = new Handler();
+    private final Handler handler =
+            new Handler();
 
     @Override
     protected void onServiceConnected() {
@@ -42,7 +41,8 @@ public class WifiAccessibilityService extends AccessibilityService {
 
         handler.postDelayed(() -> {
 
-            for (AccessibilityNodeInfo root : getWindowsRoots()) {
+            for (AccessibilityNodeInfo root :
+                    getWindowsRoots()) {
 
                 if (root != null) {
 
@@ -50,15 +50,9 @@ public class WifiAccessibilityService extends AccessibilityService {
 
                         handler.postDelayed(() -> {
 
-                            Intent intent =
-                                    new Intent(
-                                            this,
-                                            GrandmaWidget.class);
-
-                            intent.setAction(
-                                    AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-
-                            sendBroadcast(intent);
+                            GrandmaWidget.updateAllWidgets(
+                                    this
+                            );
 
                         }, 1000);
 
@@ -72,15 +66,21 @@ public class WifiAccessibilityService extends AccessibilityService {
 
     private AccessibilityNodeInfo[] getWindowsRoots() {
 
-        java.util.List<android.view.accessibility.AccessibilityWindowInfo>
-                windows = getWindows();
+        java.util.List<
+                android.view.accessibility
+                        .AccessibilityWindowInfo> windows =
+                getWindows();
 
         AccessibilityNodeInfo[] roots =
-                new AccessibilityNodeInfo[windows.size()];
+                new AccessibilityNodeInfo[
+                        windows.size()];
 
-        for (int i = 0; i < windows.size(); i++) {
+        for (int i = 0;
+                i < windows.size();
+                i++) {
 
-            roots[i] = windows.get(i).getRoot();
+            roots[i] =
+                    windows.get(i).getRoot();
         }
 
         return roots;
