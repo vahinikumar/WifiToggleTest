@@ -48,15 +48,19 @@ public class WifiAccessibilityService extends AccessibilityService {
 
                     if (searchWifi(root)) {
 
-                        Intent intent =
-                                new Intent(
-                                        this,
-                                        GrandmaWidget.class);
+                        handler.postDelayed(() -> {
 
-                        intent.setAction(
-                                AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                            Intent intent =
+                                    new Intent(
+                                            this,
+                                            GrandmaWidget.class);
 
-                        sendBroadcast(intent);
+                            intent.setAction(
+                                    AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+
+                            sendBroadcast(intent);
+
+                        }, 1000);
 
                         return;
                     }
@@ -87,7 +91,8 @@ public class WifiAccessibilityService extends AccessibilityService {
 
         if (node == null) return false;
 
-        CharSequence text = node.getText();
+        CharSequence text =
+                node.getText();
 
         CharSequence description =
                 node.getContentDescription();
