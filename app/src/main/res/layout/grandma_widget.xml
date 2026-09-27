@@ -10,8 +10,8 @@
         android:id="@+id/wifi_widget_image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/ringer"
+        android:src="@drawable/ringer_on"
         android:scaleType="centerInside"
-        android:contentDescription="Wi-Fi toggle" />
+        android:contentDescription="Ringer status" />
 
 </FrameLayout>
