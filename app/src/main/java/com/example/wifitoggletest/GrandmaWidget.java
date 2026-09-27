@@ -3,6 +3,7 @@ package com.example.wifitoggletest;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiManager;
@@ -16,9 +17,44 @@ public class GrandmaWidget extends AppWidgetProvider {
             AppWidgetManager appWidgetManager,
             int[] appWidgetIds) {
 
+        updateWidgets(
+                context,
+                appWidgetManager,
+                appWidgetIds
+        );
+    }
+
+    public static void updateAllWidgets(Context context) {
+
+        AppWidgetManager manager =
+                AppWidgetManager.getInstance(context);
+
+        ComponentName componentName =
+                new ComponentName(
+                        context,
+                        GrandmaWidget.class);
+
+        int[] widgetIds =
+                manager.getAppWidgetIds(
+                        componentName);
+
+        updateWidgets(
+                context,
+                manager,
+                widgetIds
+        );
+    }
+
+    private static void updateWidgets(
+            Context context,
+            AppWidgetManager appWidgetManager,
+            int[] appWidgetIds) {
+
         WifiManager wifiManager =
-                (WifiManager) context.getApplicationContext()
-                        .getSystemService(Context.WIFI_SERVICE);
+                (WifiManager)
+                        context.getApplicationContext()
+                                .getSystemService(
+                                        Context.WIFI_SERVICE);
 
         boolean wifiOn =
                 wifiManager != null &&
@@ -32,17 +68,22 @@ public class GrandmaWidget extends AppWidgetProvider {
                             R.layout.grandma_widget);
 
             if (wifiOn) {
+
                 views.setImageViewResource(
                         R.id.wifi_widget_image,
                         R.drawable.wifi_on);
+
             } else {
+
                 views.setImageViewResource(
                         R.id.wifi_widget_image,
                         R.drawable.wifi_off);
             }
 
             Intent intent =
-                    new Intent(context, MainActivity.class);
+                    new Intent(
+                            context,
+                            MainActivity.class);
 
             PendingIntent pendingIntent =
                     PendingIntent.getActivity(
@@ -58,7 +99,8 @@ public class GrandmaWidget extends AppWidgetProvider {
 
             appWidgetManager.updateAppWidget(
                     appWidgetId,
-                    views);
+                    views
+            );
         }
     }
 }
