@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
+import android.net.wifi.WifiManager;
 import android.widget.RemoteViews;
 
 public class GrandmaWidget extends AppWidgetProvider {
@@ -15,12 +16,30 @@ public class GrandmaWidget extends AppWidgetProvider {
             AppWidgetManager appWidgetManager,
             int[] appWidgetIds) {
 
+        WifiManager wifiManager =
+                (WifiManager) context.getApplicationContext()
+                        .getSystemService(Context.WIFI_SERVICE);
+
+        boolean wifiOn =
+                wifiManager != null &&
+                wifiManager.isWifiEnabled();
+
         for (int appWidgetId : appWidgetIds) {
 
-            RemoteViews views = new RemoteViews(
-                    context.getPackageName(),
-                    R.layout.grandma_widget
-            );
+            RemoteViews views =
+                    new RemoteViews(
+                            context.getPackageName(),
+                            R.layout.grandma_widget);
+
+            if (wifiOn) {
+                views.setImageViewResource(
+                        R.id.wifi_widget_image,
+                        R.drawable.wifi_on);
+            } else {
+                views.setImageViewResource(
+                        R.id.wifi_widget_image,
+                        R.drawable.wifi_off);
+            }
 
             Intent intent =
                     new Intent(context, MainActivity.class);
@@ -31,18 +50,15 @@ public class GrandmaWidget extends AppWidgetProvider {
                             0,
                             intent,
                             PendingIntent.FLAG_UPDATE_CURRENT |
-                            PendingIntent.FLAG_IMMUTABLE
-                    );
+                            PendingIntent.FLAG_IMMUTABLE);
 
             views.setOnClickPendingIntent(
                     R.id.wifi_widget_image,
-                    pendingIntent
-            );
+                    pendingIntent);
 
             appWidgetManager.updateAppWidget(
                     appWidgetId,
-                    views
-            );
+                    views);
         }
     }
 }
