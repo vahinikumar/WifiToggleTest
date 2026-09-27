@@ -2,6 +2,7 @@ package com.example.wifitoggletest;
 
 import android.accessibilityservice.AccessibilityService;
 import android.content.Intent;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -30,13 +31,13 @@ public class WifiAccessibilityService extends AccessibilityService {
         instance.startActivity(intent);
 
         instance.handler.postDelayed(
-                () -> instance.inspectRingVolume(),
+                () -> instance.setRingVolumeToMaximum(),
                 1500);
 
         return true;
     }
 
-    private void inspectRingVolume() {
+    private void setRingVolumeToMaximum() {
 
         for (android.view.accessibility.AccessibilityWindowInfo window
                 : getWindows()) {
@@ -78,66 +79,15 @@ public class WifiAccessibilityService extends AccessibilityService {
 
         if (isRingVolume) {
 
-            StringBuilder result =
-                    new StringBuilder();
+            Bundle arguments = new Bundle();
 
-            result.append("RING VOLUME\n\n");
+            arguments.putFloat(
+                    "android.view.accessibility.action.ARGUMENT_PROGRESS_VALUE",
+                    15f);
 
-            AccessibilityNodeInfo.RangeInfo range =
-                    node.getRangeInfo();
-
-            if (range != null) {
-
-                result.append("MIN: ")
-                        .append(range.getMin())
-                        .append("\n");
-
-                result.append("MAX: ")
-                        .append(range.getMax())
-                        .append("\n");
-
-                result.append("CURRENT: ")
-                        .append(range.getCurrent())
-                        .append("\n\n");
-            }
-
-            result.append("SUPPORTED ACTIONS:\n\n");
-
-            for (AccessibilityNodeInfo.AccessibilityAction action
-                    : node.getActionList()) {
-
-                result.append("ID: ")
-                        .append(action.getId())
-                        .append("\n");
-
-                CharSequence label =
-                        action.getLabel();
-
-                if (label != null) {
-
-                    result.append("LABEL: ")
-                            .append(label)
-                            .append("\n");
-                }
-
-                result.append("\n");
-            }
-
-            Intent intent =
-                    new Intent(
-                            this,
-                            DiagnosticActivity.class);
-
-            intent.putExtra(
-                    "diagnostic",
-                    result.toString());
-
-            intent.addFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            startActivity(intent);
-
-            return true;
+            return node.performAction(
+                    16908349,
+                    arguments);
         }
 
         for (int i = 0;
