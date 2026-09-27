@@ -1,6 +1,8 @@
 package com.example.wifitoggletest;
 
 import android.accessibilityservice.AccessibilityService;
+import android.appwidget.AppWidgetManager;
+import android.content.Intent;
 import android.os.Handler;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -45,6 +47,17 @@ public class WifiAccessibilityService extends AccessibilityService {
                 if (root != null) {
 
                     if (searchWifi(root)) {
+
+                        Intent intent =
+                                new Intent(
+                                        this,
+                                        GrandmaWidget.class);
+
+                        intent.setAction(
+                                AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+
+                        sendBroadcast(intent);
+
                         return;
                     }
                 }
@@ -62,22 +75,32 @@ public class WifiAccessibilityService extends AccessibilityService {
                 new AccessibilityNodeInfo[windows.size()];
 
         for (int i = 0; i < windows.size(); i++) {
+
             roots[i] = windows.get(i).getRoot();
         }
 
         return roots;
     }
 
-    private boolean searchWifi(AccessibilityNodeInfo node) {
+    private boolean searchWifi(
+            AccessibilityNodeInfo node) {
 
         if (node == null) return false;
 
         CharSequence text = node.getText();
+
         CharSequence description =
                 node.getContentDescription();
 
-        String t = text == null ? "" : text.toString();
-        String d = description == null ? "" : description.toString();
+        String t =
+                text == null
+                        ? ""
+                        : text.toString();
+
+        String d =
+                description == null
+                        ? ""
+                        : description.toString();
 
         if (t.toLowerCase().contains("wi-fi") ||
                 t.toLowerCase().contains("wifi") ||
@@ -92,7 +115,9 @@ public class WifiAccessibilityService extends AccessibilityService {
             }
         }
 
-        for (int i = 0; i < node.getChildCount(); i++) {
+        for (int i = 0;
+                i < node.getChildCount();
+                i++) {
 
             AccessibilityNodeInfo child =
                     node.getChild(i);
@@ -100,7 +125,9 @@ public class WifiAccessibilityService extends AccessibilityService {
             if (child != null) {
 
                 if (searchWifi(child)) {
+
                     child.recycle();
+
                     return true;
                 }
 
