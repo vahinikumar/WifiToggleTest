@@ -2,7 +2,6 @@ package com.example.wifitoggletest;
 
 import android.accessibilityservice.AccessibilityService;
 import android.os.Handler;
-import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 public class WifiAccessibilityService extends AccessibilityService {
@@ -41,49 +40,55 @@ public class WifiAccessibilityService extends AccessibilityService {
 
         handler.postDelayed(() -> {
 
-            for (AccessibilityNodeInfo root :
-                    getWindowsRoots()) {
+            for (android.view.accessibility
+                    .AccessibilityWindowInfo window
+                    : getWindows()) {
+
+                AccessibilityNodeInfo root =
+                        window.getRoot();
 
                 if (root != null) {
 
                     if (searchWifi(root)) {
 
+                        root.recycle();
+
+                        /*
+                         * Give the phone a moment to
+                         * complete the Wi-Fi change.
+                         */
                         handler.postDelayed(() -> {
 
-                            GrandmaWidget.updateAllWidgets(
-                                    this
+                            /*
+                             * Close the Control Panel.
+                             */
+                            performGlobalAction(
+                                    GLOBAL_ACTION_BACK
                             );
 
-                        }, 1000);
+                            /*
+                             * Wait for the Wi-Fi state
+                             * to update, then refresh
+                             * the widget image.
+                             */
+                            handler.postDelayed(() -> {
+
+                                GrandmaWidget.updateAllWidgets(
+                                        getApplicationContext()
+                                );
+
+                            }, 1000);
+
+                        }, 700);
 
                         return;
                     }
+
+                    root.recycle();
                 }
             }
 
         }, 1000);
-    }
-
-    private AccessibilityNodeInfo[] getWindowsRoots() {
-
-        java.util.List<
-                android.view.accessibility
-                        .AccessibilityWindowInfo> windows =
-                getWindows();
-
-        AccessibilityNodeInfo[] roots =
-                new AccessibilityNodeInfo[
-                        windows.size()];
-
-        for (int i = 0;
-                i < windows.size();
-                i++) {
-
-            roots[i] =
-                    windows.get(i).getRoot();
-        }
-
-        return roots;
     }
 
     private boolean searchWifi(
@@ -145,7 +150,7 @@ public class WifiAccessibilityService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(
-            AccessibilityEvent event) {
+            android.view.accessibility.AccessibilityEvent event) {
     }
 
     @Override
@@ -156,6 +161,8 @@ public class WifiAccessibilityService extends AccessibilityService {
     public void onDestroy() {
 
         instance = null;
+
+        handler.removeCallbacksAndMessages(null);
 
         super.onDestroy();
     }
